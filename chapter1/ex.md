@@ -1,7 +1,7 @@
 # 1 初めてのコンテナ
 ## stage1: hello nginx docker
 
-- コンテナイメージpull
+### コンテナイメージpull
 ```bash
 # pull image
 $ docker pull nginx:1.19
@@ -14,11 +14,12 @@ nginx                                           1.19         3169fe28086d   3 da
 ```
 
 
-- コンテナ起動
+### コンテナ起動
+- コンテナの起動
 ```bash
 $ docker run -d -p 80:80 nginx:1.19
 ```
-ブラウザアクセス<br>
+- ブラウザアクセス<br>
 http://localhost:80
 
 - 実行中のコンテナ確認
@@ -28,7 +29,8 @@ $ docker ps
 CONTAINER ID   IMAGE                   COMMAND                  CREATED              STATUS          PORTS                    NAMES
 77111ed46103   nginx:1.19              "/docker-entrypoint.…"   About a minute ago   Up 59 seconds   0.0.0.0:80->80/tcp       agitated_spence
 ```
-- コンテナ内でコマンド実行
+### コンテナ内でコマンド実行
+- コマンド実行
 ```bash
 $ docker exec -it {CONTAINER ID} or {NAMES} bash
 
@@ -49,6 +51,7 @@ $ docker exec -it {CONTAINER ID} or {NAMES} cat /etc/nginx/nginx.conf
 $ docker exec -it {CONTAINER ID} or {NAMES} hoatname
 ```
 
+### コンテナ停止と起動
 - コンテナ停止
 ```bash
 $ docker stop {CONTAINER ID}
@@ -78,22 +81,21 @@ $ docker ps -a
 ```
 
 
-- failed: port<br>
-同じportは利用できない。
+### bind port
+- 同じportは利用できない。
 ```bash
 $ docker run --rm -p 80:80 nginx:1.18
 
 ocker: Error response from daemon: driver failed programming external connectivity on endpoint funny_tharp (XXXX): Bind for 0.0.0.0:80 failed: port is already allocated.
 ```
 
-- different: port<br>
-別のportは可能。
+- 別のportは可能。
 ```bash
 $ docker run --rm -p 81:80 nginx:1.18
 
 ocker: Error response from daemon: driver failed programming external connectivity on endpoint funny_tharp (XXXX): Bind for 0.0.0.0:80 failed: port is already allocated.
 ```
-ブラウザアクセス<br>
+- ブラウザアクセス<br>
 http://localhost:80<br>
 http://localhost:81<br>
 
@@ -106,7 +108,7 @@ Ctr + C<br>
 `--rm` は停止と同時に削除。
 
 
-- コンテナの削除
+### コンテナの削除
 ```bash
 # 削除
 $ doekcr rm {CONTAINER ID}
@@ -114,25 +116,44 @@ $ doekcr rm {CONTAINER ID}
 $ doekcr ps -a
 ```
 
-- imageの削除
+### host volumeのmount
+- 任意のhtmlページの表示
+```bash
+# コンテンツ
+$ mkdir template
+$ echo "<h1>hello nginx</h1>" > ./template/hello.html
+$ docker run -d -p 80:80 -v ${PWD}/template/:/usr/share/nginx/html nginx:1.19
+```
+ブラウザアクセス<br>
+http://localhost:80/hello.html<br>
+
+
+```bash
+$ docker stop {CONTAINER ID}
+```
+
+### imageの削除
 ```bash
 # 削除
 $ doekcr images
+
 # 削除されていることを確認
 $ doekcr rmi  {IMAGE ID}
 ```
 
-## ex1
+### 練習問題
+
+#### ex1
 - `docker ps` で出力されるコンテナ名(NAMES)は任意に設定が可能。任意の名前に変更せよ。
 - `docker exec -it {CONTAINER ID} or {NAMES} hoatname` で出力されるhostnameは任意に変更可能。任意の名前に変更せよ。
 
-## ex2
+#### ex2
 - `nginx:1.19`と`nginx:1.19-alpine`をimage pullし容量を比較せよ。
 - `nginx:1.19-alpine`をdocker runで実行し、ブラウザから接続確認せよ。
 
-## ex3
+#### ex3
 - httpd コンテナ`httpd:2.4-alpine`を実行し、ブラウザから接続確認せよ。
 
-## ex4
+#### ex4
 - docker hubとは何か調べよ。
 - https://hub.docker.com/ で公式イメージを検索せよ。
