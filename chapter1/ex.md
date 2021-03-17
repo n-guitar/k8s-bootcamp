@@ -116,21 +116,133 @@ $ doekcr rm {CONTAINER ID}
 $ doekcr ps -a
 ```
 
-### host volumeのmount
+### containerの揮発性とcopyとvolumeのmount
+#### containerの揮発性
+
 - 任意のhtmlページの表示
+```bash
+# コンテナ起動
+$ docker run -d -p 80:80 nginx:1.19
+```
+- ブラウザアクセス<br>
+http://localhost:80/<br>
+
+
+```bash
+# コンテナ内
+$ docker exec -it {CONTAINER ID} bash
+
+# container
+# nginx.confの内容確認
+root@XXXXX:/# cat /etc/nginx/nginx.conf
+
+# onf.d/default.confとlocationの内容確認
+root@XXXXX:/# cat /etc/nginx/conf.d/default.conf
+
+# html書き換え・・・したいところですが通常vi等はimageに含めません
+root@XXXXX:/# vi /usr/share/nginx/html/index.html
+bash: vi: command not found
+root@XXXXX:/# echo "<h1>hello nginx</h1>" > /usr/share/nginx/html/index.html
+```
+- ブラウザアクセス<br>
+http://localhost:80/<br>
+
+- コンテナ起動、削除
+```bash
+# 停止
+$ docker start {CONTAINER ID}
+
+# 削除
+$ doekcr rm {CONTAINER ID}
+
+# 削除されていることを確認
+$ doekcr ps -a
+```
+
+- もう一度起動し、先程の編集内容が表示されないことを確認
+```bash
+# コンテナ起動
+$ docker run -d -p 80:80 nginx:1.19
+$ docker ps
+```
+- ブラウザアクセス<br>
+http://localhost:80/<br>
+
+
+#### copy
+
 ```bash
 # コンテンツ
 $ mkdir template
-$ echo "<h1>hello nginx</h1>" > ./template/hello.html
-$ docker run -d -p 80:80 -v ${PWD}/template/:/usr/share/nginx/html nginx:1.19
+$ echo "<h1>hello nginx copy</h1>" > ./template/index.html
+
+# コンテナ起動
+$ docker run -d -p 80:80 nginx:1.19
+$ docker ps
+
+# コンテナへホストマシンのファイルをコピー
+$ docker cp ./template/index.html {CONTAINER ID}:/usr/share/nginx/html
 ```
-ブラウザアクセス<br>
-http://localhost:80/hello.html<br>
+- ブラウザアクセス<br>
+http://localhost:80/<br>
+
+- コンテナ起動、削除
+```bash
+# 停止
+$ docker start {CONTAINER ID}
+
+# 削除
+$ doekcr rm {CONTAINER ID}
+
+# 削除されていることを確認
+$ doekcr ps -a
+```
+
+- もう一度起動し、先程の編集内容が表示されないことを確認
+```bash
+# コンテナ起動
+$ docker run -d -p 80:80 nginx:1.19
+$ docker ps
+```
+- ブラウザアクセス<br>
+http://localhost:80/<br>
+
+#### volumeのmount
 
 
 ```bash
-$ docker stop {CONTAINER ID}
+# コンテンツ
+$ echo "<h1>hello nginx volume</h1>" > ./template/index.html
+
+# コンテナの起動
+$ docker run -d -p 80:80 -v ${PWD}/template/:/usr/share/nginx/html nginx:1.19
+$ docker run -d -p 81:80 -v ${PWD}/template/:/usr/share/nginx/html nginx:1.19
+$ docker ps
 ```
+ブラウザアクセス<br>
+http://localhost:80/<br>
+http://localhost:81/<br>
+
+- コンテナ起動、削除
+```bash
+# 停止
+$ docker start {CONTAINER ID}
+
+# 削除
+$ doekcr rm {CONTAINER ID}
+
+# 削除されていることを確認
+$ doekcr ps -a
+```
+
+- もう一度起動し、先程の編集内容が表示されることを確認
+```bash
+# コンテナ起動
+$ docker run -d -p 80:80 -v ${PWD}/template/:/usr/share/nginx/html nginx:1.19
+$ docker ps
+```
+- ブラウザアクセス<br>
+http://localhost:80/<br>
 
 ### imageの削除
 ```bash
@@ -152,8 +264,15 @@ $ doekcr rmi  {IMAGE ID}
 - `nginx:1.19-alpine`をdocker runで実行し、ブラウザから接続確認せよ。
 
 #### ex3
-- httpd コンテナ`httpd:2.4-alpine`を実行し、ブラウザから接続確認せよ。
+- `nginx:1.19-alpine`をdocker runで実行し、コンテナからホストマシンに`docker cp`を使って`/etc/nginx/nginx.conf`をコピーせよ。
 
 #### ex4
+- httpd コンテナ`httpd:2.4-alpine`を実行し、ブラウザから接続確認せよ。
+
+#### ex5
 - docker hubとは何か調べよ。
 - https://hub.docker.com/ で公式イメージを検索せよ。
+
+### 練習問題(advanced)
+#### ex1
+- `Dockerfile`を使い、`docker run -d -p 80:80 {image}`で起動し、`http://localhost:80/`でアクセスした時に、初めから`<h1>hello nginx volume</h1>`と表示されるcontainer imageを作成せよ。
