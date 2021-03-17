@@ -273,6 +273,15 @@ $ doekcr rmi  {IMAGE ID}
 - docker hubとは何か調べよ。
 - https://hub.docker.com/ で公式イメージを検索せよ。
 
+#### ex6
+- `nginx:1.19-alpine`をdocker runで実行し、`docker exec`と`env`コマンドでコンテナ内の環境変数を表示せよ。
+- docker run実行時にコンテナ内に任意の環境変数(例 HELLO=hello)を`-e`で引き渡し、`docker exec`と`env`コマンドでコンテナ内の環境変数を表示せよ。
+- `複数`の環境変数をコンテナ内に任意の環境変数を`-e`で引き渡せし、`docker exec`と`env`コマンドでコンテナ内の環境変数を表示せよ。
+
 ### 練習問題(advanced)
 #### ex1
-- `Dockerfile`を使い、`docker run -d -p 80:80 {image}`で起動し、`http://localhost:80/`でアクセスした時に、初めから`<h1>hello nginx volume</h1>`と表示されるcontainer imageを作成せよ。
+- `Dockerfile`を使い、`docker run -d -p 80:80 {image}`で起動し、`http://localhost:80/`でアクセスした時に、初めから`<h1>hello nginx image</h1>`と表示されるcontainer imageを作成せよ。
+
+#### ex2
+- 以下自習問題 002 (docker tutorialとSQL操作)を全て行え。
+- https://github.com/n-guitar/go_study#%E8%87%AA%E7%BF%92%E5%95%8F%E9%A1%8C-002-docker-tutorial%E3%81%A8sql%E6%93%8D%E4%BD%9C
