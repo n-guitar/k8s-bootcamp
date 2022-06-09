@@ -23,14 +23,23 @@ $ VBoxManage -v
 6.1.34r150636
 ```
 
+## virtualbox + vagrant + kubeadm による環境構築
+
+||docs|概要|
+|---|---|---|
+|vagrant|[k8s_on_virtualbox/doc.md](k8s_on_virtualbox/doc.md)|Ubuntu 20.04.4 LTSでcontrol plane×1 worker×1|
 
 
 ## chapter
 
-|chapter|概要||
+|chapter|docs|概要|
 |---|---|---|
 |chapter1|[chapter1/ex.md](chapter1/ex.md)|簡単なdockerの操作|
 
+## virtualbox
+- https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html
+
+## vagrant
+- https://www.vagrantup.com/downloads
 ## lima
-- 以下公式gitにsampleでk8s,k3sが用意されているがubuntuイメージから設定していく。
 - https://github.com/lima-vm/lima
