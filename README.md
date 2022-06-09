@@ -7,9 +7,30 @@
 https://github.com/n-guitar/alpine-dnsmasq<br>
 
 
+## 動作確認済環境
+```sh
+# Macbook Pro Intel
+$ sw_vers
+ProductName:    macOS
+ProductVersion: 11.6.4
+BuildVersion:   20G417
+
+# VM
+$ vagrant --version
+Vagrant 2.2.10
+
+$ VBoxManage -v
+6.1.34r150636
+```
+
+
 
 ## chapter
 
 |chapter|概要||
 |---|---|---|
 |chapter1|[chapter1/ex.md](chapter1/ex.md)|簡単なdockerの操作|
+
+## lima
+- 以下公式gitにsampleでk8s,k3sが用意されているがubuntuイメージから設定していく。
+- https://github.com/lima-vm/lima
