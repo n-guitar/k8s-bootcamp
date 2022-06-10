@@ -1,2 +1,3 @@
 k8s_on_lima/k8s_vm_template.yaml
 *.vagrant
+configs/
