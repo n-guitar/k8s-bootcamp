@@ -172,9 +172,18 @@ $ sudo kubeadm config images list
 # image pull
 $ sudo kubeadm config images pull --cri-socket=unix:///run/containerd/containerd.sock
 
+
+
 # Initializing your control-plane node
 $ ls -l /vagrant/kubeadm-config.yaml
 $ sudo kubeadm init --config /vagrant/kubeadm-config.yaml
+
+# kubelet Setting
+$ cat <<EOF | sudo tee /var/lib/kubelet/kubeadm-flags.env
+KUBELET_KUBEADM_ARGS="--container-runtime=remote --container-runtime-endpoint=unix:///run/containerd/containerd.sock --pod-infra-container-image=k8s.gcr.io/pause:3.5 --node-ip=192.168.200.11"
+EOF
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart kubelet
 
 $ mkdir -p $HOME/.kube
 $ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -184,7 +193,7 @@ $ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 $ kubectl apply -f https://projectcalico.docs.tigera.io/manifests/canal.yaml
 
 # 全てのpodがRunningになるまで待機 ※Ctr + Cで終了
-$ watch -n 1 kubectl get po -n kube-system
+$ watch -n 1 kubectl get po -n kube-system -o wide
 
 # 確認
 $ kubectl get nodes
@@ -200,6 +209,12 @@ $ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outf
    openssl dgst -sha256 -hex | sed 's/^.* //'
 ```
 
+# kubelet Setting
+$ cat <<EOF | sudo tee /var/lib/kubelet/kubeadm-flags.env
+KUBELET_KUBEADM_ARGS="--container-runtime=remote --container-runtime-endpoint=unix:///run/containerd/containerd.sock --pod-infra-container-image=k8s.gcr.io/pause:3.5 --node-ip=192.168.200.21"
+EOF
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart kubelet
 
 
 ## Worker OS設定,k8s module install
@@ -218,10 +233,30 @@ $ sudo kubeadm join 192.168.200.11:6443 --token <controlPlaneのkubeadm token li
         --discovery-token-ca-cert-hash sha256:<controlPlaneのopenssl xxx の値>
 ```
 
-## 確認
+## INTERNAL IPの修正
+- 複数NICがあるため利用するIPを変更する
 ```sh
 $ kubectl get nodes
 NAME             STATUS   ROLES                  AGE     VERSION
 controlplane01   Ready    control-plane,master   3m31s   v1.22.10
 worker01         Ready    <none>                 2m8s    v1.22.10
+
+# INTERNAL IPがかぶるので修正する
+# controller
+$ sudo vi /var/lib/kubelet/kubeadm-flags.env
+KUBELET_KUBEADM_ARGS="--container-runtime=remote --container-runtime-endpoint=/run/containerd/containerd.sock --pod-infra-container-image=k8s.gcr.io/pause:3.5 --node-ip=192.168.200.11"
+$ sudo systemctl restart kubelet
+
+# worker
+$ sudo vi /var/lib/kubelet/kubeadm-flags.env
+KUBELET_KUBEADM_ARGS="--container-runtime=remote --container-runtime-endpoint=/run/containerd/containerd.sock --pod-infra-container-image=k8s.gcr.io/pause:3.5 --node-ip=192.168.200.21"
+$ sudo systemctl restart kubelet
+```
+
+## 確認
+```sh
+$ kubectl get nodes -o wide
+NAME             STATUS   ROLES                  AGE   VERSION    INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+controlplane01   Ready    control-plane,master   59m   v1.22.10   192.168.200.11   <none>        Ubuntu 20.04.4 LTS   5.4.0-113-generic   containerd://1.5.11
+worker01         Ready    <none>                 58m   v1.22.10   192.168.200.21   <none>        Ubuntu 20.04.4 LTS   5.4.0-113-generic   containerd://1.5.11
 ```
