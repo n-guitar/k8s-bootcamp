@@ -35,7 +35,7 @@ $ VBoxManage -v
 |chapter|docs|概要|
 |---|---|---|
 |chapter1|[chapter1/ex.md](chapter1/ex.md)|簡単なdockerの操作|
-|chapter2|[chapter2/ex.md](chapter2/ex.md)|kubectlの操作環境の確認|
+|chapter2|[chapter2/ex.md](chapter2/ex.md)|kubectlの操作環境の確認とcore componentの確認|
 
 ## virtualbox
 - https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html
