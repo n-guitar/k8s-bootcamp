@@ -41,7 +41,7 @@ $ k -n kube-system get pod etcd-master-node
 
 # 個別podのyaml表示
 # k -n kube-system get pod <pod名> -o yaml
-# etcd, kube-apiserver, kube-schedulerをそれぞれ確認する
+# etcd, kube-apiserver, kube-scheduler, kube-controller-managerをそれぞれ確認する
 # それぞれどんなcontainerが動作していて、どんなコマンドを実行しているだろうか？それどのportで動作している？
 $ k -n kube-system get pod etcd-master-node -o yaml
 
@@ -70,7 +70,7 @@ $ k -n kube-system get ds
 - nodeのlabelを利用してk get nodesで表示されるnodeをmaster-nodeのみにフィルターせよ。
 
 #### ex3
-- etcd, kube-apiserver, kube-schedulerはstatic podと呼ばれている。特定のnodeのkubeletに紐付けられているが、どこにpodの定義があるかPathを答えよ。
+- etcd, kube-apiserver, kube-scheduler, kube-controller-managerはstatic podと呼ばれている。特定のnodeのkubeletに紐付けられているが、どこにpodの定義があるかPathを答えよ。
 
 #### ex4
 - api server podの定義を確認し利用されているtls-cert-file,tls-private-keyのpathを答えよ
@@ -90,3 +90,19 @@ k -n kube-system exec etcd-master-node  -- sh -c "ETCDCTL_API=3 etcdctl member l
 
 #### ex6
 - kubeadm certs check-expirationで各証明書の期限を表示せよ
+
+
+
+
+### Advanced問題
+
+#### a-ex1
+##### 背景
+Kubernetesは、クラスターの目的の状態が観測された状態と一致するように、ルーチンタスクを処理するコントローラーのグループを実行します。 <br>
+基本的に、各コントローラーはKubernetesの世界の特定のリソースを担当する。<br>
+複雑さを軽減するために、すべてのコントローラーはkube-controller-managerという名前の単一のデーモンにパッケージ化されている。<br>
+
+- node_lifecycle_controller、ReplicaSetControllerの役割を答えよ。
+- 参考
+    - https://github.com/kubernetes/kubernetes/tree/master/pkg/controller
+    - https://kubernetes.io/ja/docs/concepts/architecture/controller/

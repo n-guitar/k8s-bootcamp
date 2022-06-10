@@ -1,25 +1,43 @@
+NUM_WORKER_NODES=2
+IP_NW="10.0.0."
+IP_START=10
+
 Vagrant.configure("2") do |config|
-    config.vm.box = "ubuntu/focal64"
-    config.vm.box_version = "20220530.0.0"
+  config.vm.provision "shell", env: {"IP_NW" => IP_NW, "IP_START" => IP_START}, inline: <<-SHELL
+      apt-get update -y
+      echo "$IP_NW$((IP_START)) master-node" >> /etc/hosts
+      echo "$IP_NW$((IP_START+1)) worker-node01" >> /etc/hosts
+      echo "$IP_NW$((IP_START+2)) worker-node02" >> /etc/hosts
+  SHELL
 
-    config.vm.provider "virtualbox" do |vb|
-        vb.gui = false
+  config.vm.box = "ubuntu/focal64"
+  config.vm.box_version = "20220530.0.0"
+  config.vm.box_check_update = true
+
+  config.vm.define "master" do |master|
+    # master.vm.box = "bento/ubuntu-18.04"
+    master.vm.hostname = "master-node"
+    master.vm.network "private_network", ip: IP_NW + "#{IP_START}"
+    master.vm.provider "virtualbox" do |vb|
+        vb.memory = 4048
         vb.cpus = 2
-        vb.memory = "4096"
     end
-    config.vm.synced_folder "./", "/vagrant"
+    master.vm.provision "shell", path: "scripts/common.sh"
+    master.vm.provision "shell", path: "scripts/master.sh"
+  end
 
-    config.vm.define "controlplane01" do |server|
-        server.vm.hostname = "controlplane01"
-        server.vm.network "private_network", ip: "192.168.200.11", virtualbox__intnet: "mynetwork"
-        server.vm.network "public_network", en0: "ens0: Ethernet"
-        # server.vm.disk :disk, size: "15GB", primary: true
-    end
+  (1..NUM_WORKER_NODES).each do |i|
 
-    config.vm.define "worker01" do |server|
-        server.vm.hostname = "worker01"
-        server.vm.network "private_network", ip: "192.168.200.21", virtualbox__intnet: "mynetwork"
-        server.vm.network "public_network", en0: "ens0: Ethernet"
-        # server.vm.disk :disk, size: "15GB", primary: true
+  config.vm.define "node0#{i}" do |node|
+    node.vm.hostname = "worker-node0#{i}"
+    node.vm.network "private_network", ip: IP_NW + "#{IP_START + i}"
+    node.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 1
     end
+    node.vm.provision "shell", path: "scripts/common.sh"
+    node.vm.provision "shell", path: "scripts/node.sh"
+  end
+
+  end
 end
