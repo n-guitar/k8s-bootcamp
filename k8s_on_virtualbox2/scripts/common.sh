@@ -16,7 +16,7 @@ sudo swapoff -a
 sudo apt-get update -y
 # Install CRI-O Runtime
 
-OS="xUbuntu_20.04"
+OS="xUbuntu_21.10"
 
 VERSION="1.22"
 
