@@ -1,4 +1,4 @@
-# Pod XXXXXXXXXXX
+# Pod、ReplicaSet、Deploymentの操作
 
 ## (前提事項) Kubectlコマンドの補完 & エイリアス
 ```sh
@@ -437,7 +437,7 @@ $ k get deploy -l app=deploy-ex-pod
 ### ex2
 - 事前作業
 ```sh
-$ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/develop/chapter3/object/ex_run.sh | bash -s ex2 develop
+$ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter3/object/ex_run.sh | bash -s ex2 main
 ```
 
 #### ex2-1
@@ -449,7 +449,7 @@ $ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/develop/chapt
 ### ex3
 - 事前作業
 ```sh
-$ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/develop/chapter3/object/ex_run.sh | bash -s ex3 develop
+$ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter3/object/ex_run.sh | bash -s ex3 main
 ```
 
 #### ex3-1
