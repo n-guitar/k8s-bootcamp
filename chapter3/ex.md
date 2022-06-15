@@ -497,3 +497,8 @@ spec:
 
 ### ex5
 - 名前を"ex5-pod"、imageを"nginx:1.21-alpine"、replicas 2でdeploymentを作成せよ
+
+## cleanup
+```sh
+$ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter3/object/ex_run.sh | bash -s delete main
+```
