@@ -29,6 +29,13 @@ if [ $EX_ID == "ex3" ]; then
   exit ${RET}
 fi
 
+if [ $EX_ID == "delete" ]; then
+  echo "delete objects!"
+  kubectl delete -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/$BRANCH/chapter3/object/ex2-pod.yaml
+  kubectl delete -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/$BRANCH/chapter3/object/ex3-pod.yaml
+  exit ${RET}
+fi
+
 echo "Please check ID"
 
 exit ${RET}
