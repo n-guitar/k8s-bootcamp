@@ -30,6 +30,20 @@ $ VBoxManage -v
 |vagrant|[k8s_on_virtualbox2/doc.md](k8s_on_virtualbox2/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2)|
 |vagrant|[package_box/doc.md](package_box/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2) <br>k8sを予めPackagingしたイメージを利用<br> vm起動後kubeadm init/joinを行う|
 
+## Docker + k3s
+- 注意！一部kubeletやstaticpodの確認ができない
+
+||docs|概要|
+|---|---|---|
+|Docker + k3s|[k3s_in_doccker/doc.md](k3s_in_doccker/doc.md)|k3sでcontrol plane×1 worker×2<br>|
+
+- 以下のportを利用
+
+|用途|\<host port>:\<container port>|
+|---|---|
+|Api用|6443:6443|
+|Ingress用|80:80,443:443,10080:80,10443:443,20080:80,20443:443|
+|NodePort用|30000-30005:30000-30005, 31000-31005:30000-30005|
 
 ## chapter
 
