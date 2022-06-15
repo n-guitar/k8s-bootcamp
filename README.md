@@ -28,6 +28,7 @@ $ VBoxManage -v
 ||docs|概要|
 |---|---|---|
 |vagrant|[k8s_on_virtualbox2/doc.md](k8s_on_virtualbox2/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2)|
+|vagrant|[package_box/doc.md](package_box/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2) <br>k8sを予めPackagingしたイメージを利用<br> vm起動後kubeadm init/joinを行う|
 
 
 ## chapter

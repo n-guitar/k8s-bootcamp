@@ -12,6 +12,7 @@ $ cd package_box
 $ pwd
 /XXXXXXX/k8s-bootcamp/package_box
 $ vagrant up master
+# passwordを聞かれたらvagrantとタイプ
 $ vagrant ssh master
 ```
 
@@ -45,6 +46,7 @@ $ cd package_box
 $ pwd
 /XXXXXXX/k8s-bootcamp/package_box
 $ vagrant up node01
+# passwordを聞かれたらvagrantとタイプ
 $ vagrant ssh node01
 ```
 

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: ex2-pod
+  name: ex2-pod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ex2-pod
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ex2-pod
+    spec:
+      containers:
+      - image: httpd:2.4-alpine
+        name: httpd
+        resources: {}
+status: {}
