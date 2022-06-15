@@ -8,8 +8,8 @@ metadata:
 spec:
   containers:
   - image: nginx:1.21-alpine
-    name: ex3-pod-1
+    name: ex3-pod-nginx
     resources: {}
   - image: httpdddd:2.4-alpine
-    name: ex3-pod-2
+    name: ex3-pod-httpd
     resources: {}
