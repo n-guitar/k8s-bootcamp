@@ -23,6 +23,12 @@ if [ $EX_ID == "ex2" ]; then
   exit ${RET}
 fi
 
+if [ $EX_ID == "ex3" ]; then
+  echo "set ex3 objects!"
+  kubectl apply -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/$BRANCH/chapter3/object/ex3-pod.yaml
+  exit ${RET}
+fi
+
 echo "Please check ID"
 
 exit ${RET}
