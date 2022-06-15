@@ -51,8 +51,8 @@ kubectl get nodes
 K3S_TOKEN=${RANDOM}${RANDOM}${RANDOM} docker-compose down
 
 # ボリュームの削除
-docker volume rm sre-study-kubernetes_k3s-server
-docker volume rm sre-study-kubernetes_k3s-worker-data
+docker volume rm k3s_in_doccker_k3s-server
+docker volume rm k3s_in_doccker_k3s-worker-data
 
 # イメージの削除
 docker images | grep "rancher/k3s" | awk '{print $3}' | xargs -I '{}' docker rmi '{}'
