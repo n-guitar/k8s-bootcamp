@@ -201,6 +201,10 @@ $ k exec -it <pod名> -c nginx -- /bin/sh
 curl chap4-svc
 # 複数回実行し、それぞれのPodにアクセスしていることを確認
 for i in `seq 1 5` ; do curl chap4-svc ; done;
+
+# 削除
+$ k delete -f /tmp/chap4-svc.yaml
+$ k delete -f /tmp/chap4-pod.yaml
 ```
 
 ## 練習問題
@@ -216,13 +220,13 @@ $ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter4
 ※今回特に意識しないがdefault namespaceの場合
 
 #### ex1-2
-- "ex2-pod-xxxx"のServiceのType、TergetPortはなにか？
+- "chap4-ex1"のServiceのType、TergetPortはなにか？
 
 #### ex1-3
-- "ex2-pod-xxxx"のServiceのLabelはいくつあるか？
+- "chap4-ex1"のServiceのLabelはいくつあるか？
 
 #### ex1-4
-- "ex2-pod-xxxx"のServiceのEndpointsはいくつあるか？
+- "chap4-ex1"のServiceのEndpointsはいくつあるか？
 
 ### ex2
 - 事前作業
