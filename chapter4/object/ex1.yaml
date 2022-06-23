@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: chap4-ex1
+  name: chap4-ex1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chap4-ex1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: chap4-ex1
+    spec:
+      containers:
+      - image: httpd:alpine
+        name: httpd
+        resources: {}
+status: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: chap4-ex1
+  name: chap4-ex1
+spec:
+  ports:
+  - name: 80-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: chap4-ex1
+  type: NodePort
+status:
+  loadBalancer: {}
