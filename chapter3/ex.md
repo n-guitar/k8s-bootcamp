@@ -234,7 +234,7 @@ $ k exec init-pod -- curl localhost|grep Hello
 # nodeportで公開
 $ k expose pod/init-pod --type="NodePort" --port 80
 # port確認
-$ k describe svc init-demo |grep NodePort:
+$ k describe svc init-pod |grep NodePort:
 # ブラウザでnodeのIPでaccess
 # 例: http://192.168.200.11:30008/
 
