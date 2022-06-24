@@ -43,7 +43,7 @@ $ k get pod -o wide
 $ k describe pod test-pod
 
 # Podのログ確認
-$ k logs test-web
+$ k logs test-pod
 
 # Pod定義の編集
 # 変更前確認
