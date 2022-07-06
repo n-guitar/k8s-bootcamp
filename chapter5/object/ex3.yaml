@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ex3-pod
+  name: ex3-pod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ex3-pod
+  template:
+    metadata:
+      labels:
+        app: ex3-pod
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: nginx
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - worker-node01
