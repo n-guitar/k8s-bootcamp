@@ -627,7 +627,7 @@ spec:
                 - exp
 ```
 
-### ex4-1
+#### a-ex1-1
 - requiredDuringSchedulingIgnoredDuringExecutionではなく、preferredDuringSchedulingIgnoredDuringExecutionに変更し、env=expのlabelがついているnodeがない場合でも他の場所で稼働させる用にyamlを修正し、applyせよ
 
 ### a-ex2
