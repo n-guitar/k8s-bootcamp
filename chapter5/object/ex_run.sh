@@ -26,6 +26,10 @@ fi
 if [ $EX_ID == "delete" ]; then
   echo "delete objects!"
   kubectl delete -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/$BRANCH/chapter5/object/ex3.yaml
+  kubectl delete deploy ex1-pod
+  kubectl delete deploy ex2-pod
+  kubectl delete deploy ex3-pod
+  kubectl delete deploy ex4-pod
   exit ${RET}
 fi
 

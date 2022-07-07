@@ -20,7 +20,7 @@ worker-node01   Ready    worker                 88m   v1.22.10
 worker-node02   Ready    worker                 78m   v1.22.10
 ```
 
-Docker + k3s環境でもChapterを実施できますが、練習問題は実施できないので注意してください。
+Docker + k3s環境でもChapterを実施できます。
 
 ||docs|概要|
 |---|---|---|
@@ -117,15 +117,18 @@ $ k label nodes worker-node02 env=stg
 $ k get nodes -l env=dev
 NAME            STATUS   ROLES    AGE     VERSION
 worker-node01   Ready    worker   3h39m   v1.22.10
+
 # 確認
 $ k get nodes -l env=stg
 NAME            STATUS   ROLES    AGE     VERSION
 worker-node02   Ready    worker   3h29m   v1.22.10
+
 # describeコマンドで個別に確認する
 $ k describe node worker-node01
 $ k describe node worker-node02
 ```
 <br>
+
 - PodへのnodeSelectorフィールドの追加
 
   - 以下のDeploymentを作成し、applyする
@@ -167,6 +170,7 @@ spec:
 $ k get nodes -l env=dev
 NAME            STATUS   ROLES    AGE     VERSION
 worker-node01   Ready    worker   3h49m   v1.22.10
+
 # worker-node01にスケジュールされる
 $ k get pod -l app=ns-dev-pod -o wide
 NAME                          READY   STATUS    RESTARTS   AGE    IP              NODE            NOMINATED NODE   READINESS GATES
@@ -195,7 +199,6 @@ Tolarationを直訳すると寛容、黙認。<br>
 !! ただし、耐性があるだけで、そのTaintsがついたNodeへ必ずスケジューリングされるとは限らない !!
 
 <br>
-<br>
 
 - Nodeにtaintを付与
 
@@ -204,6 +207,7 @@ Tolarationを直訳すると寛容、黙認。<br>
 # kubectl taint nodes  <node-name>  <key>=<value>:<NoSchedule, PreferNoSchedule or NoExecute.>
 $ k taint nodes worker-node01 cpu=lowspec:NoSchedule
 $ k taint nodes worker-node02 cpu=lowspec:NoSchedule
+
 # 確認
 $ k describe nodes |grep Taints
 Taints:             node-role.kubernetes.io/master:NoSchedule
@@ -213,6 +217,7 @@ Taints:             cpu=lowspec:NoSchedule
 
 
 <br>
+
 - Pod配置
   - 以下のDeploymentを作成し、applyする
 
@@ -251,6 +256,7 @@ spec:
 $ k get pod -l app=tola-pod
 NAME                       READY   STATUS    RESTARTS   AGE
 tola-pod-c5855894f-nctkk   0/1     Pending   0          25s
+
 # Eventsを確認する
 $ k describe pod -l app=tola-pod
 ```
@@ -297,9 +303,11 @@ tola-pod-584c849497-k9dnv   1/1     Running   0          11s
 
 # Deploymentの削除
 $ k delete -f /tmp/tola-pod.yaml
+
 # Taintsの削除
 $ k taint nodes worker-node01 cpu=lowspec:NoSchedule-
 $ k taint nodes worker-node02 cpu=lowspec:NoSchedule-
+
 # 確認
 $ k describe nodes |grep Taints
 Taints:             node-role.kubernetes.io/master:NoSchedule
@@ -312,7 +320,6 @@ Taints:             <none>
 PodをKubernetesクラスター内の特定のノードにスケジュールさせる方法。<br>
 nodeSelectorより高度な条件を記述できる。<br>
 
-<br><br>
 
 #### nodeAffinity
 NodeのラベルによってPodがどのNodeにスケジュールされるかを制限する。<br>
@@ -378,7 +385,7 @@ naffinity-pod-75c4d4c5c8-cdc6t   1/1     Running   0          21s   10.244.87.20
 # 削除
 $ k delete -f /tmp/naffinity-pod.yaml
 ```
-<br><br>
+<br>
 
 #### podAffinityとpodAntiAffinity
 Nodeのラベルではなく、すでにNodeで稼働しているPodのラベルに従ってPodがスケジュールされるNodeを制限する<br>
@@ -422,6 +429,7 @@ NAME                            READY   STATUS    RESTARTS   AGE   IP           
 frontend-pod-79767bcc99-z8nfv   1/1     Running   0          7s    10.244.158.6   worker-node02   <none>           <none>
 ```
 <br>
+
 - podAffinityの付与
 
 - 以下のDeploymentを作成し、applyする
@@ -543,7 +551,7 @@ image: nginx:alpine
 
 ### ex2
 
-### ex2-1
+#### ex2-1
 - worker-node01に以下の条件でlabelを付与せよ
 ```
 exam=ex2
@@ -564,37 +572,37 @@ image: nginx:alpine
 $ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter5/object/ex_run.sh | bash -s ex3 main
 ```
 
-### ex3-1
+#### ex3-1
 - worker-node01で稼働しているPodは何個存在しているか？<br>
 ※default namespaceのみとする
 
-### ex3-2
+#### ex3-2
 - worker-node01にcpu=lowspec:NoExecuteとし、Taintを付与し、 ex3-1で確認したworker-node01で稼働しているPodがどうなったか答えよ。
 
-### ex3-3
+#### ex3-3
 - worker-node01のcpu=lowspec:NoExecuteのTaintを削除し、 worker-node01、worker-node02にそれぞれ、cpu=lowspec:NoScheduleのTaintをTaintを付与せよ。
 
-### ex3-4
+#### ex3-4
 -  ex3-3で確認したPodがどうなったか答えよ。
 
-### ex3-5
+#### ex3-5
 - cpu=lowspec:NoScheduleを許容するTolerationsを付与したDeploymentを以下の条件で作成せよ。
 ```
 replicas: 2
-name: ex34-pod
+name: ex3-pod
 image: nginx:alpine
 ```
 
-### ex3-6
+#### ex3-6
 - ex3-3で付与したTaintを削除せよ
 
 
 ## 練習問題(advanced)
 
-## a-ex1
+### a-ex1
 - 事前確認
 以下のyamlはnodeAffinityを利用して、env=expのlabelがついているnodeにスケジュールするように定義されている。<br>
-しかしながら、env=expのlabelがついているnodeは存在しない。<br>
+しかしながら、env=expのlabelがついているnodeは存在しないため、Pending状態となってしまう。<br>
 
 ```yaml
 apiVersion: apps/v1
@@ -627,7 +635,7 @@ spec:
                 - exp
 ```
 
-### ex4-1
+#### a-ex1-1
 - requiredDuringSchedulingIgnoredDuringExecutionではなく、preferredDuringSchedulingIgnoredDuringExecutionに変更し、env=expのlabelがついているnodeがない場合でも他の場所で稼働させる用にyamlを修正し、applyせよ
 
 ### a-ex2
@@ -643,7 +651,7 @@ image: nginx:alpine
 ```
 
 
-### cleanup
+## cleanup
 ```sh
 $ curl -sL https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter5/object/ex_run.sh | bash -s delete main
 ```
