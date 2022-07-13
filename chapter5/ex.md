@@ -1,4 +1,4 @@
-# Serviceの操作
+# Schedulingの操作
 
 ## (前提事項) Kubectlコマンドの補完 & エイリアス
 ```sh
@@ -9,7 +9,7 @@ $ complete -F __start_kubectl k
 ```
 
 ## (前提事項)kubernetes clusterの情報確認
-!! このChapterではworker nodeが2代以上あることが望ましいです。
+!! このChapterではworker nodeが2台以上あることが望ましいです。
 
 ```sh
 # control-plane, workerが各1台以上Readyで存在していること
