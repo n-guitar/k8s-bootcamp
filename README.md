@@ -53,7 +53,7 @@ $ VBoxManage -v
 |chapter2|[chapter2/ex.md](chapter2/ex.md)|kubectlの操作環境の確認とcore componentの確認|
 |chapter3|[chapter3/ex.md](chapter3/ex.md)|Pod、ReplicaSet、Deploymentの操作|
 |chapter4|[chapter4/ex.md](chapter4/ex.md)|Serviceの操作|
-|chapter4|[chapter5/ex.md](chapter5/ex.md)|Schedulingの操作|
+|chapter5|[chapter5/ex.md](chapter5/ex.md)|Schedulingの操作|
 
 ## virtualbox
 - https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html

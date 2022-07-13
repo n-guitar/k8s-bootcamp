@@ -1,4 +1,4 @@
-# Serviceの操作
+# Schedulingの操作
 
 ## (前提事項) Kubectlコマンドの補完 & エイリアス
 ```sh
