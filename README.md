@@ -54,6 +54,7 @@ $ VBoxManage -v
 |chapter3|[chapter3/ex.md](chapter3/ex.md)|Pod、ReplicaSet、Deploymentの操作|
 |chapter4|[chapter4/ex.md](chapter4/ex.md)|Serviceの操作|
 |chapter5|[chapter5/ex.md](chapter5/ex.md)|Schedulingの操作|
+|chapter6|[chapter6/ex.md](chapter6/ex.md)|データの永続化 PV/PVC/StorageClassの操作|
 
 ## virtualbox
 - https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html
