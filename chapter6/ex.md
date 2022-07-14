@@ -61,12 +61,21 @@ $ sudo apt-get install -y nfs-common
 
 
 ### k3s
-以下の手順を参照
 
-[/nfs-server_container/nfsshare/doc.md](../nfs-server_container/nfsshare/doc.md)
+nfs server containerを起動する
 
 ```sh
+$ docker run -d --name nfs --privileged -v /tmp:/nfsshare -e SHARED_DIRECTORY=/nfsshare --network=k3s_in_doccker_default itsthenetwork/nfs-server-alpine:12
+
+# ディレクトリ作成
+$ docker exec -it nfs /bin/sh -c "mkdir /nfsshare/pv"
+$ docker exec -it nfs /bin/sh -c "mkdir /nfsshare/storageclass"
+
 # 確認
+$ docker ps -f "name=nfs"
+CONTAINER ID   IMAGE                                COMMAND              CREATED         STATUS         PORTS     NAMES
+f3f6e5bba76a   itsthenetwork/nfs-server-alpine:12   "/usr/bin/nfsd.sh"   8 minutes ago   Up 8 minutes             nfs
+
 $ docker exec -it nfs ls -l /nfsshare
 total 8
 drwxr-xr-x    2 root     root            64 Jul 13 12:27 pv
@@ -76,6 +85,9 @@ $ docker exec -it nfs cat /etc/exports
 /nfsshare *(rw,fsid=0,async,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
 
 $ docker exec -it nfs /bin/sh -c "echo 'hello strage' > /nfsshare/pv/index.html"
+
+# IPの確認 後ほど利用するので覚えておく
+$ docker exec -it nfs hostname -i
 ```
 
 
