@@ -159,6 +159,11 @@ $ sudo vi /etc/hosts
 
 ## 練習問題 (wordpressを作成)
 
+### イメージ図
+<img src="./img1.png" width="500px">
+
+
+
 ### ex1
 - 以下のコマンドでDB Server用のPasswordを管理するsecretsを作成せよ
 
