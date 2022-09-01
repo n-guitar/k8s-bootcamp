@@ -4,6 +4,12 @@
 
 set -euxo pipefail
 
+
+
+
+
+
+
 # Variable Declaration
 
 KUBERNETES_VERSION="1.22.10-00"
@@ -16,7 +22,7 @@ sudo swapoff -a
 sudo apt-get update -y
 # Install CRI-O Runtime
 
-OS="xUbuntu_21.10"
+OS="xUbuntu_20.04"
 
 VERSION="1.22"
 
