@@ -1,4 +1,4 @@
-# NamespaceとDNS
+# IngressControllerと復習
 
 ## (前提事項) Kubectlコマンドの補完 & エイリアス
 ```sh
