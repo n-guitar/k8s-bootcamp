@@ -59,13 +59,17 @@ $ k apply -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/nginx_
 - 確認
 ```sh
 # 確認
-$ k get deploy -n kube-system -l k8s-app=traefik-ingress-lb
-NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
-traefik-ingress-controller   1/1     1            1           2m11s
+k get namespaces nginx-ingress
+NAME            STATUS   AGE
+nginx-ingress   Active   50s
 
-$ k get svc -n kube-system traefik-ingress-service
-NAME                      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                       AGE
-traefik-ingress-service   NodePort   10.99.121.120   <none>        80:32707/TCP,8080:30597/TCP   10m
+$ k get all -n nginx-ingress
+NAME                      READY   STATUS    RESTARTS   AGE
+pod/nginx-ingress-nq7wd   1/1     Running   0          6s
+pod/nginx-ingress-mvdd5   1/1     Running   0          6s
+
+NAME                           DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/nginx-ingress   2         2         2       2            2           <none>          6s
 ```
 
 ## Ingressの作成
