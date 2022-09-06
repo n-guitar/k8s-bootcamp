@@ -283,8 +283,216 @@ $ curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${API
 $ curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${APISERVER}/api/v1/namespaces/${NAMESPACE}/pods| jq -r '.items[0].metadata.name, .items[0].status.phase'
 ```
 
+## SecurityContext
+
+### UserとGroup
+- 以下のPodを作成し、applyする
+
+```sh
+# yamlの作成
+# 以下のyaml定義をコピーしてyamlファイルを作成する
+$ vi /tmp/cap9-user.yaml
+$ k apply -f /tmp/cap9-user.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cap9-user
+  name: cap9-user
+spec:
+  containers:
+  - image: alpine
+    name:cap9-user
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        sleep 30
+      done
+```
+
+```sh
+# 確認
+$ k get pod cap9-user
+
+# containerでshellを実行
+$ k exec -it cap9-user -- sh
+# 以下container内
+
+# rootで実行されている
+id
+uid=0(root) gid=0(root) groups=1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+
+# ファイルも当然rootで作成される
+touch /tmp/testfile
+ls -l /tmp/testfile
+-rw-r--r--    1 root     root             0 Sep  6 10:11 /tmp/testfile
+
+# shell終了
+exit
+```
+
+- 以下のPodを作成し、applyする
+
+```sh
+# yamlの作成
+# 以下のyaml定義をコピーしてyamlファイルを作成する
+$ vi /tmp/cap9-sec-user.yaml
+$ k apply -f /tmp/cap9-sec-user.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cap9-sec-user
+  name: cap9-sec-user
+spec:
+  containers:
+  - image: alpine
+    name: cap9-sec-user
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        sleep 30
+      done
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 3000
+```
+
+```sh
+# 確認
+$ k get pod cap9-sec-user
+
+# containerでshellを実行
+$ k exec -it cap9-sec-user -- sh
+# 以下container内
+
+# 設定したUser/Gropuで実行されている
+id
+uid=1000 gid=3000
+
+# 設定したUser/Gropuで作成される
+touch /tmp/testfile
+ls -l /tmp/testfile
+-rw-r--r--    1 1000     3000             0 Sep  6 10:15 /tmp/testfile
+
+# shell終了
+exit
+```
+
+!! 個人的にはContainer Imagesの時点(例：Dockerfileの時点)でUser(Gropu)を予め指定しておいたほうが良いと考える。<br>
+その場合、SecurityContextの指定をしなくてもrootで実行されない<br>
 
 
+### Rootの実行の制限
+- 以下のPodを作成し、applyする
+
+```sh
+# yamlの作成
+# 以下のyaml定義をコピーしてyamlファイルを作成する
+$ vi /tmp/cap9-nonroot.yaml
+$ k apply -f /tmp/cap9-nonroot.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cap9-nonroot
+  name: cap9-nonroot
+spec:
+  containers:
+  - image: alpine
+    name: cap9-nonroot
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        sleep 30
+      done
+    securityContext:
+      runAsNonRoot: true
+```
+
+```sh
+# 確認
+# 実行できない
+$ k get pod cap9-nonroot
+NAME           READY   STATUS                       RESTARTS   AGE
+cap9-nonroot   0/1     CreateContainerConfigError   0          14s
+
+# 詳細
+# rootの実行エラーが出ている
+$ k describe pod cap9-nonroot
+・・・<省略>・・・
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+・・・<省略>・・・
+  Warning  Failed     5s (x4 over 38s)  kubelet            Error: container has runAsNonRoot and image will run as root (pod: "cap9-nonroot_default(72aff5e2-d890-47fa-9754-a63913207627)", container: cap9-nonroot)
+
+# 削除
+$ k delete -f /tmp/cap9-nonroot.yaml
+```
+
+- 以下yamlを修正し、applyする
+
+```sh
+# yamlの修正
+# 以下のyaml定義をコピーしてyamlファイルを作成する
+$ vi /tmp/cap9-nonroot.yaml
+$ k apply -f /tmp/cap9-nonroot.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cap9-nonroot
+  name: cap9-nonroot
+spec:
+  containers:
+  - image: alpine
+    name: cap9-nonroot
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        sleep 30
+      done
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 3000
+```
+
+```sh
+# 確認
+# 実行される
+$ k get pod cap9-nonroot
+NAME           READY   STATUS    RESTARTS   AGE
+
+# 実行ユーザ
+$ k exec cap9-nonroot -- id
+uid=1000 gid=3000
+```
 
 ここまで作成
 -----
@@ -348,3 +556,28 @@ Replica：1
 ### ex3
 - Pod内からkubectl get nodesができるPodを作成せよ
 - ※ClusterRole,ClusterRoleBindingを利用すること
+
+
+### ex4
+- 以下のyaml編集し、userid=2001,groupid=3001でPodを実行せよ
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cap9-ex4
+  name: cap9-ex4
+spec:
+  containers:
+  - image: alpine
+    name: cap9-ex4
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        sleep 30
+      done
+```
