@@ -305,7 +305,7 @@ metadata:
 spec:
   containers:
   - image: alpine
-    name:cap9-user
+    name: cap9-user
     command:
     - sh
     - -c
@@ -494,8 +494,65 @@ $ k exec cap9-nonroot -- id
 uid=1000 gid=3000
 ```
 
-ここまで作成
------
+
+## NetworkPolicy
+### イメージ図
+- redisに対してfrontendのPodからのアクセスを拒否する
+
+
+<img src="./cap9.png" width="400px">
+
+### 各Pod、Serviceの作成
+- 以下コマンドを実行する
+```sh
+$ k apply -f https://raw.githubusercontent.com/n-guitar/k8s-bootcamp/main/chapter9/networkpolicy_sample.yaml
+```
+
+- 確認
+
+NodePortでWebBrowserでアクセスし、各サービスにアクセスしてみる。
+
+```sh
+$ k get pod -l 'run in (frontend,backend,redis)'
+NAME       READY   STATUS    RESTARTS   AGE
+redis      1/1     Running   0          9m54s
+backend    1/1     Running   0          9m55s
+frontend   1/1     Running   0          9m55s
+
+$ k get svc -l 'app in (frontend-service,backend-service,redis-service)'
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+frontend-service   NodePort    10.43.86.190    <none>        8080:30005/TCP   10m
+backend-service    NodePort    10.43.57.134    <none>        8080:30000/TCP   10m
+redis              ClusterIP   10.43.253.120   <none>        6379/TCP         10m
+```
+
+### NetworkPolicyの作成
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: network-policy-test
+spec:
+  podSelector:
+    matchLabels:
+      run: redis
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          run: backend
+    ports:
+    - protocol: TCP
+      port: 6379
+```
+
+NodePortでWebBrowserでアクセスし、各サービスにアクセスしてみる。
+
+
+
 
 ## 練習問題
 
