@@ -1,0 +1,104 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: frontend
+  name: frontend
+spec:
+  containers:
+  - image: kodekloud/webapp-conntest:latest
+    name: frontend
+    env:
+    - name: APP_NAME
+      value: Frontend Application
+    - name: BG_COLOR
+      value: blue
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: frontend-service
+  name: frontend-service
+spec:
+  ports:
+  - name: 8080-8080
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: frontend
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: backend
+  name: backend
+spec:
+  containers:
+  - image: kodekloud/webapp-conntest:latest
+    name: backend
+    env:
+    - name: APP_NAME
+      value: Backend Application
+    - name: BG_COLOR
+      value: red
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: backend-service
+  name: backend-service
+spec:
+  ports:
+  - name: 8080-8080
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: backend
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: redis
+  name: redis
+spec:
+  containers:
+  - image: redis:alpine
+    name: redis
+    ports:
+    - containerPort: 6379
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-service
+  name: redis-service
+spec:
+  ports:
+  - name: 6379-6379
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    run: redis

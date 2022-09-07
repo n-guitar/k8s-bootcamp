@@ -57,6 +57,7 @@ $ VBoxManage -v
 |chapter6|[chapter6/ex.md](chapter6/ex.md)|データの永続化 PV/PVC/StorageClassの操作|
 |chapter7|[chapter7/ex.md](chapter7/ex.md)|NamespaceとDNS|
 |chapter8|[chapter8/ex.md](chapter8/ex.md)|IngressControllerと復習|
+|chapter8|[chapter9/ex.md](chapter9/ex.md)|RBAC、SecurityContext、NetWorkPolicyの操作|
 
 ## virtualbox
 - https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html
