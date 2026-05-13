@@ -4,6 +4,20 @@
 
 旧 `chapter1〜9` の現代版という位置付けで、`registry.k8s.io` / Pod Security Admission / Gateway API など **2026 年時点の標準** に揃えています。
 
+## 🤔 なぜ Track 0 をやるのか
+
+> **ストーリー:** あなたは `docker run` までは出来る。チームから「次から本番は Kubernetes ね」と言われた。
+> ググると `Pod`, `Deployment`, `Service`, `Ingress`, `PVC`, `RBAC` … 名前ばかり出てくる。**それぞれが何の痛みを解消するために生まれたか** を順序立てて知りたい。
+
+Track 0 はその順序で並んでいます。各章は「**この機能が無かったら、あなたはこう困る**」というシーンから始まり、解決として該当オブジェクトを導入します。
+
+## ✨ Track 0 でとくに痺れて欲しい設計
+
+- 全てが **`kind: ...`** のリソースという統一感 (Pod も Service も Role も同じ枠組)
+- **ラベルセレクタ** という、ポインタを持たない疎結合 (`app=web` だけで Service と Pod が繋がる)
+- 宣言 → Controller の reconcile → 観測の **三角形** が、章を通して何度も登場する
+- 最後の `10-mini-app` で、ここまで学んだ部品がパズルのように噛み合う瞬間
+
 ## 想定読者
 
 - `docker run` / `docker build` がイメージできる

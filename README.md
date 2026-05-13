@@ -4,6 +4,9 @@
 
 設計の出発点となった調査レポート: [n-guitar/second-brain#143](https://github.com/n-guitar/second-brain/issues/143)
 
+> **最初に読む推奨:** [docs/why-k8s.md](./docs/why-k8s.md) — 「なぜ Kubernetes が要るのか / 設計が痺れる 5 つのポイント」
+> 各章 README には 🤔 **なぜ必要？** / ✨ **面白いポイント** / 😱 **あるある罠** のセクションがあります。手を動かす前にぜひ。
+
 ## 4 トラック構成
 
 | トラック | 基盤 | ねらい |

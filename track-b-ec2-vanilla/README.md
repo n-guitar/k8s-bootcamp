@@ -2,6 +2,22 @@
 
 EC2 上に **kubeadm + containerd + Cilium** で素の Kubernetes クラスタを構築するトラックです。マネージドでは触れない etcd / kube-apiserver / kubelet のレイヤを自分で組み立てて運用感覚を取り戻すのが目的。
 
+## 🤔 なぜ Track B をやるのか
+
+> **ストーリー:** EKS は便利だが、API server のフラグや etcd の場所はあなたから隠れている。
+> いざ「謎の挙動」に出会った時、**箱の中** を知らないと推理が出来ない。
+> Track B はその「箱の中」を一度自分で組み立てるための場所です。
+
+- kubeadm が裏で何を撒いているか (`/etc/kubernetes/`) を **目で見る**
+- etcd / kube-apiserver / scheduler / controller-manager が **static Pod として manifest 1 枚** で動いていることに痺れる
+- kubelet を再起動して挙動を試せる (マネージドでは禁断)
+
+## ✨ Track B でとくに痺れて欲しい設計
+
+- **static Pod**: control-plane 自体が「Pod」で動くという、k8s のメタっぷり
+- **TLS 一式の自動発行**: kubeadm が CA を作り、kubelet を bootstrap token で参加させる流れ
+- **CNI plug-in 化**: kubeadm は CNI を **入れない**。「ネットワークはお前が決めろ」というデザイン
+
 > **注意:** EC2 / VPC / EBS の課金が発生します。各章末の後片付け、最後の [`99-cleanup`](./99-cleanup/) を必ず実行してください。
 
 ## 構成イメージ

@@ -5,6 +5,21 @@ Docker さえあれば動く、完全ローカル / 完全無料の bootcamp ト
 > **このトラックは「v1.22 から v1.33 で何が変わったか」に集中** しています。
 > Pod / Service / Deployment などの **基礎から学びたい人は [Track 0 — Fundamentals](../track-0-fundamentals/) から** どうぞ。
 
+## 🤔 なぜ Track A をやるのか
+
+> **ストーリー:** あなたは過去に CKA を取り、運用もしていた。ところが 4 年離れたら、現場の同僚が `crictl` を叩き、`PodSecurityPolicy` の話が通じず、`Ingress` ではなく `HTTPRoute` を書いていた。
+> 何が起きた？ — Track A はその「離れていた間に起きた事件」を **1 日 1 章** で追体験するためのものです。
+
+各章は「旧来こうだった」→「v1.22 以降この KEP が来た」→「今こう書く」という **before/after** 構成。
+
+## ✨ Track A でとくに痺れて欲しい設計
+
+- **dockershim 削除**: kubelet と Docker Engine を切り離した結果、CRI という抽象が真に意味を持った
+- **Pod Security Admission**: PSP の "誰の何が当たるか分からない" を、namespace ラベル 1 行に圧縮した割り切り
+- **Sidecar Containers (KEP-753)**: `initContainers[].restartPolicy: Always` という、API を増やさずに新パターンを表現したエレガンス
+- **Gateway API**: アノテーション地獄を、リソース 3 階層 + ロール分離で解いた
+- **Cilium / eBPF**: kube-proxy という "誰もが踏んできた性能ボトルネック" をカーネルレベルで置き換えた
+
 ## このトラックで体験すること
 
 - `kind` で **multi-node (control-plane×1, worker×2)** クラスタ
