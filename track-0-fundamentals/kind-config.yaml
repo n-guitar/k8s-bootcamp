@@ -1,0 +1,39 @@
+# 3-node kind cluster for k8s-bootcamp (Track 0 & Track A 共通)
+#
+# 使い方:
+#   kind create cluster --image kindest/node:v1.33.0 --config kind-config.yaml
+#
+# extraPortMappings は Track 0 ch08 (Gateway API) と ch10 (mini-app) で
+# host から http://localhost / http://localhost:443 を叩けるように開けている。
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: bootcamp
+networking:
+  # PSA / NetworkPolicy 等の検証で IPv6 が邪魔なので明示
+  ipFamily: ipv4
+  apiServerAddress: "127.0.0.1"
+nodes:
+  - role: control-plane
+    # 80/443 を host に抜く。Gateway API / Ingress の動作確認に使う
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+    # PSA / audit を試したい人向けに、AuditPolicy も将来仕込めるよう kubeadm patch を空で予約
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+  - role: worker
+    labels:
+      tier: app
+      topology.kubernetes.io/zone: za
+  - role: worker
+    labels:
+      tier: app
+      topology.kubernetes.io/zone: zb

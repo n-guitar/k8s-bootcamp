@@ -86,6 +86,12 @@ kubectl label ns ch08 pod-security.kubernetes.io/enforce=baseline --overwrite
 
 ### 1. Gateway API CRD と Envoy Gateway を入れる
 
+**最短手順**:
+```bash
+../scripts/install-gateway.sh
+```
+
+中身は以下と等価です (時間があれば手で打ってもよい):
 ```bash
 # Gateway API CRD
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/standard-install.yaml

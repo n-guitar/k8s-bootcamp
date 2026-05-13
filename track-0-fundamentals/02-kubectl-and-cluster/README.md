@@ -10,10 +10,16 @@
 ## 🤔 なぜ必要？ (ストーリー)
 
 > あなたは前章で「1 台 Docker の限界」を体感した。
+> - (a) `docker kill` したら復旧しない
+> - (b) スケールに別途 LB が要る
+> - (c) 設定がイメージに焼き付く
+>
 > Docker を 5 台に増やしたとき、誰が「どの Docker にどのコンテナを置くか」を決めるのか?
 > 設定変更を 5 台に流すのは誰か? あるノードが死んだら、別ノードに移すのは誰か?
 >
 > **その "誰か" が Kubernetes です。**
+>
+> 本章では「**誰か**」の **正体 (control-plane の中身) と話し方 (kubectl)** を覚えます。03 章から (a) (b) (c) への "復讐戦" が始まります。
 
 Kubernetes は最低限こういう登場人物で出来ています:
 
@@ -83,27 +89,23 @@ Pod も Deployment も Service も、CRD で作ったあなた独自リソース
 
 ### 1. クラスタを起動する
 
-`kind-config.yaml` (本リポジトリの `track-0-fundamentals/kind-config.yaml` 想定):
-
-```yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-name: bootcamp
-nodes:
-  - role: control-plane
-    extraPortMappings:
-      - containerPort: 80
-        hostPort: 80
-      - containerPort: 443
-        hostPort: 443
-  - role: worker
-  - role: worker
-```
+**最短手順** (本リポジトリの `track-0-fundamentals/kind-config.yaml` を使用):
 
 ```bash
-kind create cluster --image kindest/node:v1.33.0 --config kind-config.yaml
-kubectl cluster-info
+cd ../  # track-0-fundamentals に戻る
+./scripts/up.sh
 ```
+
+これは内部で `kind create cluster --image kindest/node:v1.33.0 --config kind-config.yaml` を実行し、metrics-server まで入れます。
+中身が気になる方は `kind-config.yaml` を覗いてみてください (3 ノード + zone ラベル + extraPortMappings 80/443)。
+
+うまく行ったか確認:
+```bash
+kubectl cluster-info
+kubectl get nodes -o wide
+```
+
+> **このクラスタは Track 0 の以降の章 / Track A でもそのまま使い続けます。** この章末で `kind delete` しないでください (= 後片付けはトラック修了後)。
 
 ### 2. ノードを見る
 
@@ -175,9 +177,13 @@ kubectl --v=8 get pods 2>&1 | grep -E '(GET|POST|PUT|DELETE) http'
 
 → **`kubectl は単なる HTTP client`** であることを目で確認。
 
-### 6. クラスタを消す
+### 6. (任意) クラスタを消す手段の確認
+
+**今は消さないでください** (以降の章でも使う) が、いずれ消す時は:
 
 ```bash
+./scripts/down.sh
+# または
 kind delete cluster --name bootcamp
 ```
 

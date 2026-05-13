@@ -28,6 +28,16 @@ Track 0 はその順序で並んでいます。各章は「**この機能が無�
 
 Track A と **同じ kind クラスタ** を共有する想定です。まずは [`02-kubectl-and-cluster`](./02-kubectl-and-cluster/) でクラスタを 1 つ立てて、以降の章はその上で続けてください。Track A に進む際もそのまま使えます。
 
+## いきなり試したい人へ
+
+- [QUICKSTART.md](./QUICKSTART.md) — 卒業課題のアプリを 1 コマンドで動かす最短手順 (初回 10〜15 分 / 2 回目 3 分)
+- [PREREQUISITES.md](./PREREQUISITES.md) — `docker / kind / kubectl / helm / make` のインストール
+- `./scripts/up.sh` — クラスタ起動 (3 ノード + metrics-server)
+- `./scripts/install-gateway.sh` — Gateway API CRD + Envoy Gateway を 1 発で
+- `./scripts/down.sh` — 破棄
+- `./scripts/doctor.sh` — 困った時の健康診断
+- `./scripts/warm-cache.sh` — オフライン (飛行機/出張) 前に全 image を pre-pull
+
 ## 章一覧
 
 | # | ディレクトリ | 学ぶこと | キーオブジェクト |
@@ -57,7 +67,6 @@ Track A と **同じ kind クラスタ** を共有する想定です。まずは
 - 簡単なアプリを YAML で書いて kind 上に公開できる
 - Track A の v1.22 → v1.33 差分章 (Sidecar / VAP / Cilium / Argo CD / 等) にスムーズに進める
 
-## TODO
-- [ ] 各章の YAML / 手順を埋める
-- [ ] 共通の `kind-config.yaml` を Track A と共有
-- [ ] 進度チェック用のクイズか checklist
+## 自己反省レビュー
+
+[docs/reflection-track-0.md](../docs/reflection-track-0.md) に「学習者目線でこの教材は楽しいか / 理解できるか / ハードルは妥当か」のフィードバックを記録しています。気付いた問題点・改善案を PR / Issue 歓迎です。

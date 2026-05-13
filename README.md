@@ -6,6 +6,8 @@
 
 > **最初に読む推奨:** [docs/why-k8s.md](./docs/why-k8s.md) — 「なぜ Kubernetes が要るのか / 設計が痺れる 5 つのポイント」
 > 各章 README には 🤔 **なぜ必要？** / ✨ **面白いポイント** / 😱 **あるある罠** のセクションがあります。手を動かす前にぜひ。
+>
+> **とにかく動かしたい人:** [track-0-fundamentals/QUICKSTART.md](./track-0-fundamentals/QUICKSTART.md) で 5 分で Web/AP/DB を `http://localhost` に出せます。
 
 ## 4 トラック構成
 

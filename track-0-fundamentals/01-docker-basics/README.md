@@ -137,7 +137,13 @@ curl http://localhost:5000/v2/myapp/tags/list
 | (c) 設定変えたい | `docker exec web vi /etc/nginx/conf.d/default.conf` | コンテナを消すと変更が消える。イメージに焼き直す or volume が必要 |
 
 > **(a)+(b)+(c) を解決するために、ReplicaSet / Service / ConfigMap が要る。**
-> **= 次章以降で出てくる。**
+>
+> Track 0 の各章は、この **3 つの痛みへの "復讐戦"** として配置されています:
+> - (a) "落ちたら誰も拾わない" → **03 章 (ReplicaSet / Deployment)** で復讐
+> - (b) "スケールが面倒、LB は別途" → **04 章 (Service)** で復讐
+> - (c) "設定がイメージに焼き込まれる" → **05 章 (ConfigMap / Secret)** で復讐
+>
+> 次章 02 では、まず **舞台 (= kubectl とクラスタ)** を整えます。
 
 ## やってみて気づくこと
 

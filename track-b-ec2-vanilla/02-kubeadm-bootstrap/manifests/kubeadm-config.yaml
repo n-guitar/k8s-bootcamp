@@ -1,0 +1,38 @@
+# Track B 02: kubeadm init 用設定
+# __CP_PRIVATE__ を control-plane の Private IP に sed で置換する
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: __CP_PRIVATE__
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///run/containerd/containerd.sock
+  kubeletExtraArgs:
+    - name: node-ip
+      value: __CP_PRIVATE__
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+kubernetesVersion: v1.32.0
+controlPlaneEndpoint: "__CP_PRIVATE__:6443"
+networking:
+  podSubnet: 10.244.0.0/16
+  serviceSubnet: 10.96.0.0/12
+apiServer:
+  extraArgs:
+    - name: admission-control-config-file
+      value: /etc/kubernetes/admission/admission-config.yaml
+  extraVolumes:
+    - name: admission-config
+      hostPath: /etc/kubernetes/admission
+      mountPath: /etc/kubernetes/admission
+      readOnly: true
+      pathType: DirectoryOrCreate
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ""

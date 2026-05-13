@@ -113,17 +113,28 @@ Pod Anti-Affinity の "なるべく分散" を、より宣言的に書ける。
 ### 0. 準備
 
 ```bash
-kubectl create ns ch07
+kubectl create ns ch07 --dry-run=client -o yaml | kubectl apply -f -
 kubectl label ns ch07 pod-security.kubernetes.io/enforce=baseline --overwrite
+# ↑ baseline ラベルは「Pod の特権昇格を防ぐ標準のガード」。09 章で詳説。今は "本番想定の最低ライン" と覚えて進めて OK。
 kubectl get nodes --show-labels
 ```
 
-### 1. Node にラベルを付ける
+### 1. Node ラベルを確認 (kind-config で既に貼ってある)
+
+`track-0-fundamentals/kind-config.yaml` を使ってクラスタを立てた人は、worker に `tier=app` と **標準ラベル** `topology.kubernetes.io/zone=za / zb` が既に貼られています:
 
 ```bash
-kubectl label node bootcamp-worker  tier=app  zone=za
-kubectl label node bootcamp-worker2 tier=app  zone=zb
-kubectl get nodes -L tier,zone
+kubectl get nodes -L tier,topology.kubernetes.io/zone
+# bootcamp-worker   Ready  <none>  ...  app  za
+# bootcamp-worker2  Ready  <none>  ...  app  zb
+```
+
+> 標準ラベル `topology.kubernetes.io/zone` を使うのは、後述の `topologySpreadConstraints` が **クラウドでも同じキー** で動くため。自分用に独自キーを使うなら `zone` でも問題ありませんが、現場の慣例に合わせます。
+
+(ラベルが付いていなければ手動で:)
+```bash
+kubectl label node bootcamp-worker  tier=app topology.kubernetes.io/zone=za --overwrite
+kubectl label node bootcamp-worker2 tier=app topology.kubernetes.io/zone=zb --overwrite
 ```
 
 ### 2. `nodeSelector` で配置を固定
@@ -134,7 +145,8 @@ apiVersion: v1
 kind: Pod
 metadata: {name: pinned, namespace: ch07}
 spec:
-  nodeSelector: {zone: za}
+  nodeSelector:
+    topology.kubernetes.io/zone: za
   containers: [{name: c, image: nginx:1.27}]
 ```
 
@@ -222,7 +234,7 @@ kubectl -n ch07 get pod -o wide
 # spread.yaml (Deployment の spec.template.spec に下記を追加)
 topologySpreadConstraints:
   - maxSkew: 1
-    topologyKey: zone
+    topologyKey: topology.kubernetes.io/zone
     whenUnsatisfiable: ScheduleAnyway
     labelSelector: {matchLabels: {app: web}}
 ```
@@ -255,8 +267,9 @@ kubectl -n ch07 get pod gtd -o jsonpath='{.status.qosClass}'    # → Guaranteed
 
 ```bash
 kubectl delete ns ch07
-kubectl label node bootcamp-worker  tier- zone-
-kubectl label node bootcamp-worker2 tier- zone-
+# tier ラベルは Track 0 全体で使わないのでクリーンアップしてよい (zone は kind-config 側で再生成)
+kubectl label node bootcamp-worker  tier-
+kubectl label node bootcamp-worker2 tier-
 ```
 
 ## やってみて気づくこと

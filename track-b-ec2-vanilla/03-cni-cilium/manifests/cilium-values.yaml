@@ -1,0 +1,24 @@
+# Track B 03: Cilium v1.16 helm values
+# __CP_PRIVATE__ を control-plane の Private IP に置換してから helm install
+kubeProxyReplacement: true
+k8sServiceHost: __CP_PRIVATE__
+k8sServicePort: 6443
+
+ipam:
+  mode: kubernetes
+
+routingMode: tunnel
+tunnelProtocol: vxlan
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+operator:
+  replicas: 1
+
+debug:
+  enabled: false

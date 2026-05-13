@@ -77,8 +77,9 @@ Service IP を実際にルーティングしているのは kube-proxy (iptables
 ### 0. 準備
 
 ```bash
-kubectl create ns ch04
+kubectl create ns ch04 --dry-run=client -o yaml | kubectl apply -f -
 kubectl label ns ch04 pod-security.kubernetes.io/enforce=baseline --overwrite
+# ↑ baseline ラベルは「Pod の特権昇格を防ぐ標準のガード」。09 章で詳説。今は "本番想定の最低ライン" と覚えて進めて OK。
 ```
 
 ### 1. Deployment + ClusterIP Service
@@ -123,13 +124,19 @@ kubectl -n ch04 get endpointslice -l kubernetes.io/service-name=web
 
 ### 2. クライアント Pod から DNS で叩く
 
+`curlimages/curl` には `sh` が無いので、busybox で 1 ショット実行します。
+
 ```bash
-kubectl -n ch04 run client --image=curlimages/curl:8.10.1 --restart=Never -it --rm -- sh
-# (中で)
-nslookup web
-# → web.ch04.svc.cluster.local が解決される
-for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" http://web; done
-# → 200 が並ぶ
+# DNS 解決の確認
+kubectl -n ch04 run dns-test --rm -i --restart=Never \
+  --image=busybox:1.36 -- nslookup web
+# → Address: <ClusterIP>  / Name: web.ch04.svc.cluster.local
+
+# HTTP で 5 回叩く (ロードバランスの体感)
+kubectl -n ch04 run curl-test --rm -i --restart=Never \
+  --image=busybox:1.36 --command -- sh -c \
+  'for i in 1 2 3 4 5; do wget -qS -O /dev/null http://web 2>&1 | grep HTTP/; done'
+# → "HTTP/1.1 200 OK" が 5 行
 ```
 
 ### 3. 「Pod を 1 個消す」と "**勝手に振り分け先が更新される**"

@@ -81,8 +81,9 @@ PVC: 10 GB, accessMode: ReadWriteOnce, storageClassName: gp3
 ### 0. 準備
 
 ```bash
-kubectl create ns ch06
+kubectl create ns ch06 --dry-run=client -o yaml | kubectl apply -f -
 kubectl label ns ch06 pod-security.kubernetes.io/enforce=baseline --overwrite
+# ↑ baseline ラベルは「Pod の特権昇格を防ぐ標準のガード」。09 章で詳説。今は "本番想定の最低ライン" と覚えて進めて OK。
 kubectl get storageclass    # ← kind なら "standard" (local-path) が default
 ```
 
@@ -123,7 +124,7 @@ spec:
   containers:
     - name: w
       image: busybox:1.36
-      command: ["sh", "-c", "date >> /data/log && cat /data/log && sleep 5"]
+      command: ["sh", "-c", "echo \"$(date) by $(hostname)\" >> /data/log && cat /data/log"]
       volumeMounts: [{name: vol, mountPath: /data}]
   volumes:
     - name: vol
@@ -133,6 +134,7 @@ spec:
 ```bash
 kubectl apply -f pod-write.yaml
 kubectl -n ch06 logs writer
+# 2026-05-13 ... by writer    ← 1 行目
 ```
 
 ### 3. Pod を消しても **データは残る** ことを確認
@@ -140,10 +142,13 @@ kubectl -n ch06 logs writer
 ```bash
 kubectl -n ch06 delete pod writer
 kubectl apply -f pod-write.yaml   # 同じ PVC を再 mount
-kubectl -n ch06 logs writer       # ← 前回の date 行も残っている
+kubectl -n ch06 logs writer
+# 2026-05-13 ... by writer    ← 前回の行
+# 2026-05-13 ... by writer    ← 今回の行
 ```
 
-→ "**コンテナはステートレス、ボリュームはステートフル**" を体感。
+→ "**コンテナは消えてもファイルは残った**"。`writer` という同名 Pod でも、`hostname` は同じだが **PVC の中身は連続している**。これが PV/PVC の本当の意味。
+"**コンテナはステートレス、ボリュームはステートフル**" を体感。
 
 ### 4. StorageClass を覗く
 
@@ -152,9 +157,11 @@ kubectl get sc standard -o yaml | head -30
 ```
 
 注目点:
-- `provisioner: rancher.io/local-path` ← これが CSI 相当の plug-in
+- `provisioner: rancher.io/local-path` ← kind 同梱の動的プロビジョナ。**厳密には CSI driver ではない外部 controller** だが、PVC を見て PV を動的に作るという考え方は CSI と同じ
 - `reclaimPolicy: Delete` ← PVC 削除と一緒に PV も消える設定
 - `volumeBindingMode: WaitForFirstConsumer` ← Pod が来てから bind
+
+> kind の local-path は学習用。本番では EBS-CSI / EFS-CSI / Ceph 等の **正式な CSI driver** を使うことになる (Track B/C で扱う)。
 
 ### 5. AccessMode を変えて挙動を見る
 

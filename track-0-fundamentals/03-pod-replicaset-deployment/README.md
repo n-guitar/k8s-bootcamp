@@ -80,7 +80,7 @@ Deployment は ReplicaSet を **直接書き換えない**。
 ## 😱 あるある罠
 
 - **Pod を直接 `kubectl run` で運用**: 再起動されない。常に Deployment 経由で
-- **`replicas` を YAML に書いたまま HPA 併用**: GitOps で reconcile される度に HPA の値が打ち消される → Deployment では HPA 利用時 `replicas` を **書かない** (またはサーバサイド apply のフィールドオーナーシップを理解)
+- **`replicas` を YAML に書いたまま HPA 併用**: GitOps で reconcile される度に HPA の値が打ち消される → Deployment では HPA 利用時 `replicas` を **書かない** (またはサーバサイド apply のフィールドオーナーシップを理解 = GitOps と HPA で「誰がそのフィールドの持ち主か」を分ける仕組み。Track A で詳説)
 - **`image: nginx:latest`**: 同じマニフェストを apply しても何も変わらず、Pod が更新されない → 必ずバージョン明示
 - **`imagePullPolicy: Always` を本番で多用**: rolling 中に registry が落ちると全 Pod が起動できない事故。タグが固定なら `IfNotPresent`
 
@@ -89,8 +89,10 @@ Deployment は ReplicaSet を **直接書き換えない**。
 ### 0. 準備
 
 ```bash
-kubectl create ns ch03
+kubectl create ns ch03 --dry-run=client -o yaml | kubectl apply -f -
 kubectl label ns ch03 pod-security.kubernetes.io/enforce=baseline --overwrite
+# ↑ この baseline ラベルは「Pod の特権昇格を防ぐ標準のガード」を ns に貼っているだけ。
+#   09 章で詳説するので、今は "本番想定の最低ライン" と覚えて進めて OK。
 ```
 
 ### 1. Pod 単体 — "消えたら戻ってこない" を体感

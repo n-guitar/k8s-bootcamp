@@ -2,7 +2,20 @@
 
 ## ゴール
 これまでの 9 章で学んだオブジェクトを **組み合わせて**、3 層アプリを kind 上に公開する。
-旧 bootcamp のゴール (chapter8) を v1.33 + Gateway API + PSA でリブートしたもの。
+本章は **実際に動く Python (FastAPI) のアプリ** を含み、 `make up` で 1 コマンドで起動できます。
+**「Kubernetes 使えてる」** と胸を張れる状態になるのがゴール。
+
+---
+
+## まず動かす (3 行)
+
+```bash
+cd 10-mini-app
+make up        # build + load + apply + wait (初回 2〜5 分)
+make smoke     # POST/GET で動作確認
+```
+
+→ JSON が返ったら **既に Web/AP/DB が k8s で動いています**。後は楽しい実験へ進みましょう (本章 "5. 楽しい実験" にジャンプ可)。下記の Why / 設計図は読み物として後追いで OK。
 
 ---
 
@@ -11,279 +24,185 @@
 > あなたは部品 (Pod, Deployment, Service, ConfigMap, Secret, PVC, HTTPRoute, RBAC, PSA) を順番に学んだ。
 > でも実際のアプリは **これらが噛み合って 1 つのサービス** になっている。
 >
-> ここでは、よくある 3 層 (Web / AP / DB) を組み立てて:
-> - 部品同士がどう繋がるか **目で見る**
-> - "**コードを書かずに**" 設定だけでデプロイ・更新・スケール・ロールバックが回ることを体感
-> - PSA `baseline` で全 workload が動くことを確認 (本番想定の最低ライン)
->
-> 「**ああ、これでようやく "Kubernetes 使ってる" って言える**」と感じる瞬間がゴール。
+> ここで部品を組んで、**よくある 3 層 (Web / AP / DB)** を公開します。
+> - 部品同士がどう繋がるかを目で見る
+> - "コードを書かずに" 設定だけでデプロイ / 更新 / スケール / ロールバックが回ることを体感
+> - PSA `baseline` で全 workload が拒否されずに動く (= 本番想定の最低ライン)
 
 ## ✨ 面白いポイント
 
-- ここまで覚えた部品が、**そのまま同じ語彙のまま** 組み合わさる
-- アプリの本体 (`app.py`) はたった 30 行、それを **YAML 6 個** がインフラ的に支える
-- 一度組んだら、**DB の image を上げる / web の replicas を増やす / ConfigMap を書き換える** が **全部 1 行**
+- アプリ本体は **`main.py` 130 行**。それを **YAML 5 個** がインフラ的に支える
+- 各層 (Web / AP / DB) は **Service 名** だけで繋がる (IP も Pod 名も知らない)
+- 一度組んだら **DB 再起動 / AP rolling update / Web スケール / ConfigMap 書き換え** が全部 1 行
 
-## 構成イメージ
+## 構成図
 
 ```
-                 ┌────────────────────────────────────────┐
-                 │ HTTPRoute (host: app.local)            │
-                 │   ↓ parentRef                          │
-                 │ Gateway (shared, listener :80)         │
-                 │   ↓ controllerName                     │
-                 │ GatewayClass: eg (Envoy Gateway)       │
-                 └────────────────────────────────────────┘
-                                  ↓
-   Service: web (ClusterIP)
-   └─ Deployment: web (nginx, 2 replicas) ── reverse proxy → ap:8080
-                                                     ↓
-   Service: ap (ClusterIP)
-   └─ Deployment: ap (FastAPI, 2 replicas)
-        - ConfigMap: ap-config   (LOG_LEVEL, MESSAGE)
-        - Secret:    db-cred     (DB_PASSWORD)
-        └ Service: db (ClusterIP, headless)
-          └ StatefulSet: db (postgres, replicas: 1)
-              └ PVC: pgdata (1Gi, local-path)
+   curl http://localhost/        ← host から
+        ↓
+   ┌──────────────────────────────────────────────┐
+   │  Envoy Gateway (Gateway / HTTPRoute)         │
+   │  host: app.local → web Service               │
+   └──────────────────────────────────────────────┘
+        ↓
+   ┌──── web (nginx 2 replicas) ─────┐     ConfigMap: web-config (default.conf)
+   └──────────────────┬──────────────┘
+                      ↓ proxy_pass
+   ┌──── ap (FastAPI 2 replicas) ────┐     ConfigMap: ap-config (MESSAGE)
+   │   - /                           │     Secret:    db-cred  (DB_PASSWORD)
+   │   - /healthz                    │
+   │   - /guestbook  GET/POST        │
+   └──────────────────┬──────────────┘
+                      ↓ asyncpg
+   ┌──── db (postgres 1 replica) ────┐     StatefulSet + headless Service
+   │   StatefulSet name: db          │     volumeClaimTemplate: 1Gi (local-path)
+   └─────────────────────────────────┘
 ```
 
 ## 前提
 
-- 08 章までを通して進めていること (Envoy Gateway がクラスタに入っている)
-- kind の extraPortMappings で host の 80 が抜けていること
-- `/etc/hosts` に `127.0.0.1 app.local` (Mac/Linux) もしくは `localhost` で Host ヘッダを付けて curl
+- `../scripts/up.sh` 済み (= kind クラスタが動いている)
+- Envoy Gateway が入っている (08 章で install 済みのはず。未済なら `../scripts/install-gateway.sh`)
 
 ## やること
 
-### 0. namespace 準備 (PSA baseline)
+### 1. アプリを build → kind にロード → deploy
+
+ここまで来たら **コマンド 1 つ**:
 
 ```bash
-kubectl create ns mini-app
-kubectl label ns mini-app pod-security.kubernetes.io/enforce=baseline --overwrite
+cd 10-mini-app
+make up
 ```
 
-### 1. DB 層 (StatefulSet + headless Service + PVC)
+中身は以下を順に実行 (Makefile に書いてある):
 
-```yaml
-# 1-db.yaml
-apiVersion: v1
-kind: Service
-metadata: {name: db, namespace: mini-app}
-spec:
-  clusterIP: None
-  selector: {app: db}
-  ports: [{port: 5432, targetPort: 5432}]
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata: {name: db, namespace: mini-app}
-spec:
-  serviceName: db
-  replicas: 1
-  selector: {matchLabels: {app: db}}
-  template:
-    metadata: {labels: {app: db}}
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          ports: [{containerPort: 5432}]
-          env:
-            - name: POSTGRES_DB
-              value: app
-            - name: POSTGRES_USER
-              value: app
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef: {name: db-cred, key: DB_PASSWORD}
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
-          volumeMounts:
-            - {name: data, mountPath: /var/lib/postgresql/data}
-  volumeClaimTemplates:
-    - metadata: {name: data}
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources: {requests: {storage: 1Gi}}
----
-apiVersion: v1
-kind: Secret
-metadata: {name: db-cred, namespace: mini-app}
-type: Opaque
-stringData:
-  DB_PASSWORD: "s3cret-please-change"
+1. `docker build -t mini-ap:0.1 app/`     ← FastAPI app のイメージ build
+2. `kind load docker-image mini-ap:0.1 --name bootcamp`  ← クラスタの Node に push
+3. `kubectl apply -f manifests/`           ← Namespace, DB, AP, Web, Gateway を一発投入
+4. `kubectl -n mini-app wait --for=condition=Ready pods --all`  ← 全部 Ready 待ち
+
+### 2. 動作確認 (Smoke test)
+
+```bash
+make smoke
 ```
 
-### 2. AP 層 (Deployment + ConfigMap + Service)
-
-サンプル AP として小さな Python アプリを使う想定。ここでは **既存の OSS イメージ** で代用します:
-
-```yaml
-# 2-ap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata: {name: ap-config, namespace: mini-app}
-data:
-  MESSAGE: "hello from ap, talking to postgres"
-  LOG_LEVEL: "info"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata: {name: ap, namespace: mini-app}
-spec:
-  replicas: 2
-  selector: {matchLabels: {app: ap}}
-  strategy:
-    type: RollingUpdate
-    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
-  template:
-    metadata: {labels: {app: ap}}
-    spec:
-      containers:
-        - name: ap
-          # 実プロジェクトではあなたのアプリを差し替え。ここではエコーサーバで代用
-          image: hashicorp/http-echo:1.0.0
-          args: ["-text=$(MESSAGE) [pw len=$(DBPW_LEN)]", "-listen=:8080"]
-          env:
-            - name: MESSAGE
-              valueFrom: {configMapKeyRef: {name: ap-config, key: MESSAGE}}
-            - name: DBPW_LEN          # Secret から長さを抜き出すデモ的注入
-              value: "18"
-          ports: [{containerPort: 8080}]
-          readinessProbe: {httpGet: {path: /, port: 8080}, periodSeconds: 2}
----
-apiVersion: v1
-kind: Service
-metadata: {name: ap, namespace: mini-app}
-spec:
-  selector: {app: ap}
-  ports: [{port: 8080, targetPort: 8080}]
-```
-
-> 本格的な AP に置き換えるには、ConfigMap / Secret 注入を **環境変数 + volume** にし、`psycopg2` 等で `db.mini-app.svc.cluster.local:5432` に接続する実装にします。
-
-### 3. Web 層 (nginx reverse proxy)
-
-```yaml
-# 3-web.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata: {name: web-config, namespace: mini-app}
-data:
-  default.conf: |
-    server {
-      listen 80;
-      location / {
-        proxy_pass http://ap.mini-app.svc.cluster.local:8080;
-      }
+出力 (例):
+```json
+{
+    "message": "hello from FastAPI on Kubernetes",
+    "pod": "ap-6d4f7c4b9c-xq2vk",
+    "db_now": "2026-05-13T13:42:11.123456+00:00"
+}
+{
+    "id": 1
+}
+[
+    {
+        "id": 1,
+        "name": "alice",
+        "msg": "hello from k8s!",
+        "ts": "2026-05-13T13:42:11.234567+00:00"
     }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata: {name: web, namespace: mini-app}
-spec:
-  replicas: 2
-  selector: {matchLabels: {app: web}}
-  template:
-    metadata: {labels: {app: web}}
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.27-alpine
-          ports: [{containerPort: 80}]
-          volumeMounts:
-            - {name: cfg, mountPath: /etc/nginx/conf.d/}
-      volumes:
-        - name: cfg
-          configMap: {name: web-config}
----
-apiVersion: v1
-kind: Service
-metadata: {name: web, namespace: mini-app}
-spec:
-  selector: {app: web}
-  ports: [{port: 80, targetPort: 80}]
+]
 ```
 
-### 4. 公開 (Gateway API)
+→ DB に書き込んで、別 Pod から読み出せている = **3 層全部繋がっている証拠**。
 
-```yaml
-# 4-route.yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata: {name: shared, namespace: mini-app}
-spec:
-  gatewayClassName: eg
-  listeners:
-    - name: http
-      protocol: HTTP
-      port: 80
-      allowedRoutes: {namespaces: {from: Same}}
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata: {name: web, namespace: mini-app}
-spec:
-  parentRefs: [{name: shared}]
-  hostnames: ["app.local"]
-  rules:
-    - matches: [{path: {type: PathPrefix, value: /}}]
-      backendRefs: [{name: web, port: 80}]
-```
+### 3. 楽しい実験
 
-### 5. 一気に apply
+ここからが本番。
 
-```bash
-kubectl apply -f 1-db.yaml
-kubectl apply -f 2-ap.yaml
-kubectl apply -f 3-web.yaml
-kubectl apply -f 4-route.yaml
-kubectl -n mini-app get pods -o wide
-kubectl -n mini-app wait --for=condition=Ready pods --all --timeout=120s
-```
-
-### 6. 動作確認
-
-```bash
-curl -s -H 'Host: app.local' http://localhost/
-# → "hello from ap, talking to postgres [pw len=18]"
-```
-
-### 7. 楽しい実験
-
-| 実験 | コマンド | 観察 |
+| やる事 | コマンド | 観察ポイント |
 |---|---|---|
-| Web スケール | `kubectl -n mini-app scale deploy/web --replicas=5` | EndpointSlice が即更新 |
-| AP の MESSAGE 変更 | `kubectl -n mini-app edit cm ap-config` | env 注入なので **Pod を再起動するまで反映されない** |
-| AP rolling restart | `kubectl -n mini-app rollout restart deploy/ap` | ダウンタイム 0 で更新 |
-| ロールバック | `kubectl -n mini-app rollout undo deploy/ap` | 前世代に即戻る |
-| DB Pod 削除 | `kubectl -n mini-app delete pod db-0` | StatefulSet が同じ名前で復元、PVC のデータは残る |
+| **AP を 5 台に増やす** | `kubectl -n mini-app scale deploy/ap --replicas=5` | EndpointSlice が即更新、curl を連打すると `"pod"` が 5 種類に分散 |
+| **AP のメッセージを変える** | `kubectl -n mini-app edit cm ap-config` (MESSAGE を書換) | env 注入なので Pod 再起動まで反映されない (= ConfigMap 章の知識を再確認) |
+| **AP をローリング再起動** | `kubectl -n mini-app rollout restart deploy/ap` | curl ループしながら見るとダウンタイム 0 で MESSAGE が切り替わる |
+| **AP を v0.2 にロールアウト** | (image を `mini-ap:0.2` に修正して apply) | `kubectl rollout status` で進捗が見える |
+| **ロールバック** | `kubectl -n mini-app rollout undo deploy/ap` | 旧 ReplicaSet が再びスケールアウト |
+| **DB Pod を消す** | `kubectl -n mini-app delete pod db-0` | StatefulSet が `db-0` を復元、PVC データは残る |
+| **Web を 0 にする** | `kubectl -n mini-app scale deploy/web --replicas=0` | curl が 503 (Gateway 側の backend なし) |
+| **PSA 違反 Pod を試す** | `kubectl -n mini-app run bad --image=busybox --privileged -- sleep 9999` | "violates PodSecurity baseline" で拒否 |
 
-### 8. ゴールチェック (= 卒業条件)
+### 4. curl ループでローリング更新を眺める
 
-- [ ] 全 Pod が `Running`
-- [ ] `curl` でブラウザ相当の応答が返る
-- [ ] PSA `baseline` でも全 workload が拒否されずに動く
-- [ ] `kubectl rollout restart deploy/ap` でダウンタイム最小で更新できた
-- [ ] `kubectl delete pod db-0` してもデータが残ることを確認 (PVC のおかげ)
+別ターミナルで:
+```bash
+while true; do
+  curl -s -H 'Host: app.local' http://localhost/ | jq -r .pod
+  sleep 0.5
+done
+```
 
-### 9. 後片付け
+再起動:
+```bash
+kubectl -n mini-app rollout restart deploy/ap
+```
+
+→ Pod 名が **徐々に新しい hash に置き換わる**。ダウンタイムは無い。`maxUnavailable: 0` の意味を体で覚える瞬間。
+
+### 5. ログをまとめて見る
 
 ```bash
-kubectl delete ns mini-app
+make logs
+```
+
+`stern` を入れている人は:
+```bash
+stern -n mini-app -l '!service'   # 全 Pod のログを並行 tail
+```
+
+### 6. ゴールチェック (= 卒業条件)
+
+- [ ] `make up` がエラー無く通った
+- [ ] `make smoke` で 200 OK / JSON が返り、DB に書き込めた
+- [ ] AP の Pod 名が curl レスポンスに反映され、scale すると分散される
+- [ ] `kubectl rollout restart` でダウンタイム 0 で更新された
+- [ ] `kubectl delete pod db-0` してもデータが残る
+- [ ] PSA baseline で全 workload が拒否されずに動いている
+
+### 7. 後片付け
+
+```bash
+make delete   # namespace mini-app を消す
+# クラスタごと消したいなら:
+cd .. && ./scripts/down.sh
 ```
 
 ## やってみて気づくこと
 
-- **YAML 4 ファイル = 1 つの本格的なアプリ**。これがインフラがコードに溶け込んだ世界
-- 各層 (Web / AP / DB) は **Service 名** だけで疎結合 (IP も Pod 名も知らない)
-- ConfigMap / Secret の注入方法 (env vs volume) の **再起動有無** の違いを実体験
+- **YAML 5 ファイル + Python 130 行 = 1 つの本格的なアプリ**
+- 各層は **Service 名** だけで疎結合 (IP も Pod 名も知らない)
+- ConfigMap の env 注入は再起動が要る / volume マウントは自動更新、の違いが現場でそのまま使える
 - StatefulSet は Pod 名が固定 (`db-0`) で、消しても PVC とともに復元する
+- 「**たった 1 つの YAML 修正 + apply** で本番が変わる」感触が、k8s を使い続けたくなる理由
 
-> **おめでとう! Track 0 卒業です。** ここから先は [Track A](../../track-a-local-kind/) で v1.22 → v1.33 の新機能群へ。
+> **おめでとう! Track 0 卒業です。**
+> 次は [Track A](../../track-a-local-kind/) で v1.22 → v1.33 の新機能群へ。
+
+## ファイル一覧
+
+```
+10-mini-app/
+├── README.md         (このファイル)
+├── Makefile          (build / load / deploy / smoke / delete)
+├── app/
+│   ├── Dockerfile    (multi-stage, non-root, PSA restricted OK)
+│   ├── main.py       (FastAPI, asyncpg)
+│   ├── requirements.txt
+│   └── README.md
+└── manifests/
+    ├── 00-namespace.yaml   (PSA baseline + warn:restricted)
+    ├── 10-db.yaml          (Postgres StatefulSet + headless Svc + Secret)
+    ├── 20-ap.yaml          (FastAPI Deployment + ConfigMap + Svc)
+    ├── 30-web.yaml         (nginx Deployment + ConfigMap + Svc)
+    └── 40-gateway.yaml     (Gateway + HTTPRoute)
+```
 
 ## 参考
 
 - StatefulSet: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
 - Pod Security Standards: https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Gateway API: https://gateway-api.sigs.k8s.io/
+- FastAPI lifespan: https://fastapi.tiangolo.com/advanced/events/

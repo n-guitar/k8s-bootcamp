@@ -69,8 +69,9 @@ ConfigMap / Secret を **volume として** マウントすると、内容を更
 ### 0. 準備
 
 ```bash
-kubectl create ns ch05
+kubectl create ns ch05 --dry-run=client -o yaml | kubectl apply -f -
 kubectl label ns ch05 pod-security.kubernetes.io/enforce=baseline --overwrite
+# ↑ baseline ラベルは「Pod の特権昇格を防ぐ標準のガード」。09 章で詳説。今は "本番想定の最低ライン" と覚えて進めて OK。
 ```
 
 ### 1. ConfigMap を 2 通りで作る
@@ -171,10 +172,16 @@ kubectl apply -f pod-vol.yaml
 kubectl -n ch05 logs -f vol-demo &
 ```
 
-別ターミナルで:
+別ターミナルで `kubectl edit` するか、コピペで動く `kubectl patch` で書き換え:
+
 ```bash
+# 対話で書き換え (Vim 等が開く)
 kubectl -n ch05 edit cm web-config
-# data.app.conf を書き換えて保存
+
+# または 1 行で
+kubectl -n ch05 patch cm web-config --type merge -p '{
+  "data": {"app.conf": "server_name = web\nlog_level = debug\n"}
+}'
 ```
 
 → 数十秒後、`vol-demo` の log にも **新しい内容** が現れる。**Pod 再起動なし!**
