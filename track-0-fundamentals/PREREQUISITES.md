@@ -38,8 +38,9 @@ brew install kind kubectl helm jq stern
 sudo apt update && sudo apt install -y docker.io
 sudo usermod -aG docker $USER && newgrp docker
 
-# kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# kubectl (本リポジトリは v1.33.0 を想定。skew を避けるため明示バージョンを推奨)
+KVER=v1.33.0
+curl -LO "https://dl.k8s.io/release/${KVER}/bin/linux/amd64/kubectl"
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # kind

@@ -214,14 +214,20 @@ kubectl -n ch08 get httproute web
 
 ### 5. host から叩く
 
-kind の `extraPortMappings: 80→80` がある想定 (02 章設定)。
+kind の `extraPortMappings: 80→80` がある想定 (本リポジトリの `kind-config.yaml` で抜いてあります)。
 
 ```bash
 curl -s -H 'Host: app.local' http://localhost/ | head -3
 # → web-v1 が応答
 ```
 
-> Mac で `app.local` を Host ヘッダ無しで叩きたいなら `/etc/hosts` に `127.0.0.1 app.local` を追加。
+> **MacOS / Linux 注意**: `localhost:80` への到達は Docker Desktop / kind の port forward が担います。OS の firewall や VPN クライアントが間に挟まっていると `Connection refused` になる場合があります。
+> その時は **`localhost:80` ではなく kind の control-plane Node コンテナに直接** 叩くと切り分けできます:
+> ```bash
+> docker exec bootcamp-control-plane curl -s -H 'Host: app.local' http://localhost/
+> ```
+>
+> ブラウザでアクセスしたい場合は `/etc/hosts` に `127.0.0.1 app.local` を追加。
 
 ### 6. カナリア 90:10
 

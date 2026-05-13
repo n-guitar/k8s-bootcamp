@@ -65,6 +65,34 @@ v1.21 以降は **EndpointSlice** に分割: 100 endpoint ごとに 1 slice。
 Service IP を実際にルーティングしているのは kube-proxy (iptables/IPVS)。
 ただし大規模だと iptables が遅い → Track A 06 で **Cilium が eBPF で置き換える** 話に繋がる。
 
+### 5. **手で LB を組んだら何行? Service なら何行?**
+
+3 つの Pod に LB する手作業 (= 旧時代の苦行):
+
+```
+1. HAProxy / nginx を別途立てる
+2. backend サーバリストを設定ファイルに書く        # Pod IP を手で
+3. healthcheck 設定                                # 死活監視を自分で
+4. Pod が死んだら設定ファイルを書き換えて reload   # 監視スクリプトを自作
+5. Pod が増えたら同様に書き換え                    # スケール毎に手作業
+6. それを別の 5 セット (web/api/auth/cache/job) 用に複製
+```
+
+これが k8s だと:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata: {name: web}
+spec:
+  selector: {app: web}
+  ports: [{port: 80}]
+```
+
+**6 行**。死活監視も追従も EndpointSlice が **autopilot で** やってくれる。
+
+> **痺れ所:** これに気付くと、HAProxy / consul-template / Ansible で苦労した記憶が走馬灯のように蘇り、Service の有り難みが心に染みる。
+
 ## 😱 あるある罠
 
 - **selector のラベル不一致**: Service の selector が Pod のラベルと 1 文字でも違うと、Endpoints が空。`kubectl get endpointslice -l kubernetes.io/service-name=<svc>` で 0 件なら疑う

@@ -279,6 +279,14 @@ kubectl label node bootcamp-worker2 tier-
 - `preferred*` は **柔らかい希望**、`required*` は **厳格な強制**。本番は preferred が無難
 - requests を書く / 書かないだけで **QoS Class が決まる** 事実は知っておくと OOM 解析の役に立つ
 
+> **冒頭のストーリーへの答え合わせ:**
+> - 「GPU Node に nginx が乗る大事故」 → Taint `dedicated=ml:NoSchedule` で **拒否権を Node に持たせて** 解決
+> - 「同じアプリ 3 つを別 Zone に」 → `topologySpreadConstraints` で **maxSkew: 1** を宣言
+> - 「Web と Cache を同 Node に置きたい」 → `podAffinity` で同居を表現
+> - 「Pod が暴走しても Node を巻き込まれたくない」 → `resources.limits` で cgroup 強制
+>
+> 全部 **scheduler に対する "**配置のヒント**" を YAML で書くだけ**。手で割り振らない。
+
 ## 参考
 
 - Scheduling: https://kubernetes.io/docs/concepts/scheduling-eviction/
