@@ -1,68 +1,43 @@
-# k8s bootcamp
-- いろんなことを無視してdocker/k8sを動かして覚えるrepo
-- 最後のchapterでk8s上で簡単なweb/ap/db構成のアプリケーションを作成します。
-- IngressControllerを利用し、L7ロードバランス先の特定のFQDNにアクセスするため、`ワイルドカードDNS`または`hostファイル`を利用します。mac等で`ワイルドカードDNS`を利用したい場合は以下のrepoを参考にしてください。<br>
+# k8s bootcamp (v1.33 reboot)
 
-- dockerでdnsを起動し、mac上でワイルドカードdnsを作成する。<br>
-https://github.com/n-guitar/alpine-dnsmasq<br>
+2021/11 (v1.22) 時点から止まっている知識を、2026 年現在の **Kubernetes v1.33** 系に合わせて手を動かしながらキャッチアップするための bootcamp です。
 
+設計の出発点となった調査レポート: [n-guitar/second-brain#143](https://github.com/n-guitar/second-brain/issues/143)
 
-## 動作確認済環境
-```sh
-# Macbook Pro Intel
-$ sw_vers
-ProductName:    macOS
-ProductVersion: 11.6.4
-BuildVersion:   20G417
+## 3 トラック構成
 
-# VM
-$ vagrant --version
-Vagrant 2.2.10
-
-$ VBoxManage -v
-6.1.34r150636
-```
-
-## virtualbox + vagrant + kubeadm による環境構築
-
-||docs|概要|
+| トラック | 基盤 | ねらい |
 |---|---|---|
-|vagrant|[k8s_on_virtualbox2/doc.md](k8s_on_virtualbox2/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2)|
-|vagrant|[package_box/doc.md](package_box/doc.md)|Ubuntu 21.10でcontrol plane×1 worker×1 (2) <br>k8sを予めPackagingしたイメージを利用<br> vm起動後kubeadm init/joinを行う|
+| [Track A — Local / VM 無し](./track-a-local-kind/) | kind (Docker)| まずローカルで全主要機能を一通り触る。VM や AWS なしで完結 |
+| [Track B — AWS EC2 vanilla](./track-b-ec2-vanilla/) | EC2 + kubeadm + containerd + Cilium | "素の" k8s をクラウド上で組み立てて運用感覚を取り戻す |
+| [Track C — EKS](./track-c-eks/) | Terraform + EKS + Karpenter + ALB/Gateway API | マネージドのモダンスタックで実運用に近い形を体験 |
 
-## Docker + k3s
-- 注意！一部kubeletやstaticpodの確認ができない
+進める順序は **A → B → C** を推奨ですが独立に動くので、興味のあるトラックから着手しても OK です。
 
-||docs|概要|
-|---|---|---|
-|Docker + k3s|[k3s_in_doccker/doc.md](k3s_in_doccker/doc.md)|k3sでcontrol plane×1 worker×2<br>|
+## 何が学べるか (Issue #143 との対応)
 
-- 以下のportを利用
+- dockershim 削除後の **containerd / crictl**
+- **PodSecurityPolicy 廃止 → Pod Security Admission (PSA)** への移行
+- **`registry.k8s.io`** 前提のイメージ運用
+- **Sidecar Containers** (KEP-753, v1.33 stable)
+- **Gateway API** (v1.0 GA) と Ingress の使い分け
+- **ValidatingAdmissionPolicy (CEL)**
+- **Cilium / eBPF / kube-proxy replacement / Hubble**
+- **DRA / Karpenter / In-place Pod Resize** の現在地
+- **GitOps (Argo CD)** と **サプライチェーン (cosign + Kyverno)**
 
-|用途|\<host port>:\<container port>|
-|---|---|
-|Api用|6443:6443|
-|Ingress用|80:80,443:443,10080:80,10443:443,20080:80,20443:443|
-|NodePort用|30000-30005:30000-30005, 31000-31005:30000-30005|
+詳細な学習ロードマップは [docs/roadmap.md](./docs/roadmap.md) を参照。
 
-## chapter
+## 対象バージョン
 
-|chapter|docs|概要|
-|---|---|---|
-|chapter1|[chapter1/ex.md](chapter1/ex.md)|簡単なdockerの操作|
-|chapter2|[chapter2/ex.md](chapter2/ex.md)|kubectlの操作環境の確認とcore componentの確認|
-|chapter3|[chapter3/ex.md](chapter3/ex.md)|Pod、ReplicaSet、Deploymentの操作|
-|chapter4|[chapter4/ex.md](chapter4/ex.md)|Serviceの操作|
-|chapter5|[chapter5/ex.md](chapter5/ex.md)|Schedulingの操作|
-|chapter6|[chapter6/ex.md](chapter6/ex.md)|データの永続化 PV/PVC/StorageClassの操作|
-|chapter7|[chapter7/ex.md](chapter7/ex.md)|NamespaceとDNS|
-|chapter8|[chapter8/ex.md](chapter8/ex.md)|IngressControllerと復習|
-|chapter8|[chapter9/ex.md](chapter9/ex.md)|RBAC、SecurityContext、NetWorkPolicyの操作|
+- Kubernetes: **v1.33** (2025/04 リリース系)
+- 各トラックの `00-prereqs/` に必要なツールと最低バージョンを記載
 
-## virtualbox
-- https://www.oracle.com/jp/virtualization/technologies/vm/downloads/virtualbox-downloads.html
+## 旧 bootcamp について
 
-## vagrant
-- https://www.vagrantup.com/downloads
-## lima
-- https://github.com/lima-vm/lima
+VirtualBox / Vagrant / k3s in Docker / chapter1〜9 の旧資材は [`legacy/`](./legacy/) に退避しています。参照は可能ですが、v1.22 以前を前提とした手順なので **そのまま動かない** 箇所が多い点に注意してください (`k8s.gcr.io` → `registry.k8s.io`、dockershim、PSP 等)。
+
+## ライセンス / 注意
+
+- 本リポジトリは学習用。コマンドや YAML をそのまま本番投入しないこと
+- AWS を使うトラック (B, C) は **課金が発生** します。各トラックの `99-cleanup/` を必ず実施してください
