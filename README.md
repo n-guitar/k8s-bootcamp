@@ -4,15 +4,16 @@
 
 設計の出発点となった調査レポート: [n-guitar/second-brain#143](https://github.com/n-guitar/second-brain/issues/143)
 
-## 3 トラック構成
+## 4 トラック構成
 
 | トラック | 基盤 | ねらい |
 |---|---|---|
-| [Track A — Local / VM 無し](./track-a-local-kind/) | kind (Docker)| まずローカルで全主要機能を一通り触る。VM や AWS なしで完結 |
+| [Track 0 — Fundamentals](./track-0-fundamentals/) | kind (Docker) | **k8s 初めての人** 向け。主要オブジェクトを 1 つずつ学んで Web/AP/DB アプリまで |
+| [Track A — Local / VM 無し](./track-a-local-kind/) | kind (Docker)| v1.22 → v1.33 の **新機能/破壊的変更** を、ローカルで一通り体験 |
 | [Track B — AWS EC2 vanilla](./track-b-ec2-vanilla/) | EC2 + kubeadm + containerd + Cilium | "素の" k8s をクラウド上で組み立てて運用感覚を取り戻す |
 | [Track C — EKS](./track-c-eks/) | Terraform + EKS + Karpenter + ALB/Gateway API | マネージドのモダンスタックで実運用に近い形を体験 |
 
-進める順序は **A → B → C** を推奨ですが独立に動くので、興味のあるトラックから着手しても OK です。
+進める順序は **0 → A → B → C** を推奨ですが独立に動くので、興味のあるトラックから着手しても OK です。CKA 等で既に基礎がある人は **Track 0 をスキップして Track A から** で問題ありません。
 
 ## 何が学べるか (Issue #143 との対応)
 

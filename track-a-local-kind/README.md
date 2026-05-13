@@ -2,6 +2,9 @@
 
 Docker さえあれば動く、完全ローカル / 完全無料の bootcamp トラックです。Mac / Linux / Windows (WSL2) いずれでも実施可能。
 
+> **このトラックは「v1.22 から v1.33 で何が変わったか」に集中** しています。
+> Pod / Service / Deployment などの **基礎から学びたい人は [Track 0 — Fundamentals](../track-0-fundamentals/) から** どうぞ。
+
 ## このトラックで体験すること
 
 - `kind` で **multi-node (control-plane×1, worker×2)** クラスタ
